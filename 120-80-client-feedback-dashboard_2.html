@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>120/80 GROUP — Client Feedback Dashboard</title>
+<style>
+:root{
+  --surface-1:#fcfcfb; --plane:#f4f4f1; --card:#ffffff;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --hair:rgba(11,11,11,0.10);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --good:#0ca30c; --warn:#fab219; --crit:#d03b3b;
+  --up:#006300;
+  --r:10px;
+}
+:root[data-theme="dark"]{
+  --surface-1:#1a1a19; --plane:#0d0d0d; --card:#1a1a19;
+  --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --hair:rgba(255,255,255,0.10);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  --up:#0ca30c;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--plane);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 22px 80px}
+h1{font-size:26px;line-height:1.2;margin:0 0 6px;font-weight:650;letter-spacing:-.01em}
+h2{font-size:19px;margin:0 0 4px;font-weight:640;letter-spacing:-.01em}
+h3{font-size:14px;margin:0 0 2px;font-weight:620}
+h4{font-size:13px;margin:0 0 4px;font-weight:640}
+p{margin:0 0 10px}
+.sub{color:var(--ink-2);font-size:14px;margin:0}
+.dim{color:var(--muted);font-size:12.5px}
+a{color:var(--s1)}
+
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:18px}
+.themebtn{background:var(--card);border:1px solid var(--hair);border-radius:99px;padding:7px 14px;font:inherit;font-size:13px;color:var(--ink-2);cursor:pointer}
+.themebtn:hover{color:var(--ink)}
+
+.filters{display:flex;gap:22px;flex-wrap:wrap;align-items:center;background:var(--card);border:1px solid var(--hair);
+  border-radius:var(--r);padding:12px 16px;margin-bottom:16px;position:sticky;top:0;z-index:20;
+  box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.fgroup{display:flex;gap:10px;align-items:center}
+.flabel{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.seg{display:inline-flex;background:var(--plane);border-radius:99px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;font:inherit;font-size:13px;padding:5px 13px;border-radius:99px;
+  color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.10)}
+.scopenote{font-size:12.5px;color:var(--muted);margin-left:auto}
+
+.card{background:var(--card);border:1px solid var(--hair);border-radius:var(--r);padding:18px 20px;margin-bottom:16px}
+.card>header{display:block;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:860px){.grid2,.grid3{grid-template-columns:1fr}}
+
+.answer{background:var(--card);border:1px solid var(--hair);border-left:3px solid var(--s1);
+  border-radius:var(--r);padding:18px 22px;margin-bottom:16px}
+.answer ol{margin:10px 0 0;padding-left:20px}
+.answer li{margin-bottom:9px}
+.answer li:last-child{margin-bottom:0}
+.k{font-weight:650}
+
+/* how to use */
+.howto{background:var(--card);border:1px solid var(--hair);border-left:3px solid var(--s3);
+  border-radius:var(--r);padding:14px 20px;margin-bottom:16px}
+.howto ul{margin:8px 0 0;padding-left:20px}
+.howto li{font-size:13.5px;margin-bottom:5px;color:var(--ink-2)}
+
+.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:900px){.tiles{grid-template-columns:repeat(2,1fr)}}
+.tile{background:var(--card);border:1px solid var(--hair);border-radius:var(--r);padding:14px 16px}
+.tile .lab{font-size:12px;color:var(--ink-2);margin-bottom:3px}
+.tile .val{font-size:31px;font-weight:640;letter-spacing:-.02em;line-height:1.1}
+.tile .dl{font-size:12px;margin-top:2px;color:var(--muted)}
+.tile .dl b{font-weight:640}
+.up{color:var(--up)} .dn{color:var(--crit)}
+
+.hero{background:var(--card);border:1px solid var(--hair);border-radius:var(--r);padding:22px 24px;margin-bottom:16px;
+  display:flex;gap:26px;align-items:center;flex-wrap:wrap}
+.hero .num{font-size:52px;font-weight:660;letter-spacing:-.03em;line-height:1;color:var(--s1)}
+.hero .txt{flex:1;min-width:280px}
+
+svg{display:block;overflow:visible;max-width:100%}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin:0 0 12px;font-size:12.5px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+.tick{font-size:11px;fill:var(--muted)}
+.catlab{font-size:12.5px;fill:var(--ink-2)}
+.vlab{font-size:11.5px;fill:var(--ink-2);font-weight:600}
+.gl{stroke:var(--grid);stroke-width:1}
+.ax{stroke:var(--axis);stroke-width:1}
+.bar{transition:opacity .12s}
+.hit{fill:transparent;cursor:pointer}
+.row:hover .bar{opacity:.72}
+
+#tip{position:fixed;pointer-events:none;opacity:0;transition:opacity .1s;background:var(--card);
+  border:1px solid var(--hair);border-radius:8px;padding:8px 11px;font-size:12.5px;color:var(--ink);
+  box-shadow:0 6px 20px rgba(0,0,0,.14);z-index:100;max-width:280px;line-height:1.45}
+#tip .tt{font-weight:650;margin-bottom:3px}
+#tip .tr{display:flex;justify-content:space-between;gap:14px}
+#tip .tr span:last-child{font-variant-numeric:tabular-nums;font-weight:600}
+
+.tabbtn{background:transparent;border:1px solid var(--hair);border-radius:99px;padding:4px 11px;font:inherit;
+  font-size:12px;color:var(--ink-2);cursor:pointer;margin-left:8px;font-weight:500}
+.tabbtn:hover{color:var(--ink);border-color:var(--axis)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--grid)}
+th{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600;
+  position:sticky;top:0;background:var(--card);white-space:normal;line-height:1.3;vertical-align:bottom}
+#roster th,#agsnap th{white-space:nowrap}
+#roster th{cursor:pointer}
+td{vertical-align:top}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.scroll{max-height:460px;overflow:auto;border:1px solid var(--hair);border-radius:8px}
+.hidden{display:none}
+tr.hl td{background:rgba(42,120,214,.06)}
+
+/* scale legend */
+.scalekey{background:var(--plane);border-radius:8px;padding:10px 13px;font-size:12.5px;color:var(--ink-2);margin:0 0 12px}
+.scalekey b{color:var(--ink);font-weight:640}
+
+/* takeaway */
+.takeaway{border-left:3px solid var(--s1);background:var(--plane);border-radius:0 8px 8px 0;
+  padding:12px 15px;margin-top:16px;font-size:13.5px;color:var(--ink-2)}
+.takeaway .tl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--s1);font-weight:660;
+  display:block;margin-bottom:4px}
+.takeaway b{color:var(--ink)}
+
+.pill{display:inline-block;font-size:11px;font-weight:640;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.p-High{background:rgba(12,163,12,.13);color:var(--up)}
+.p-Mid{background:rgba(250,178,25,.18);color:#8a5d00}
+.p-Low{background:rgba(208,59,59,.13);color:var(--crit)}
+:root[data-theme="dark"] .p-Mid{color:#fab219}
+
+.qfilters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.qgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:860px){.qgrid{grid-template-columns:1fr}}
+blockquote{margin:0;background:var(--plane);border-radius:8px;padding:13px 15px;border-left:3px solid var(--axis)}
+blockquote.High{border-left-color:var(--good)}
+blockquote.Low{border-left-color:var(--crit)}
+blockquote.Mid{border-left-color:var(--warn)}
+blockquote p{font-size:13.5px;margin:0 0 8px;color:var(--ink)}
+blockquote footer{font-size:11.5px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.note{background:var(--plane);border-radius:8px;padding:11px 14px;font-size:12.5px;color:var(--ink-2);margin-top:14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+@media(max-width:760px){.two{grid-template-columns:1fr}}
+.sectitle{margin:32px 0 12px}
+.sectitle .n{font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--s1);font-weight:660;margin-bottom:3px}
+ul.tight{margin:6px 0 0;padding-left:19px} ul.tight li{margin-bottom:5px;font-size:13.5px}
+.empty{color:var(--muted);font-size:13px;padding:14px 0}
+@media print{.filters{position:static}.themebtn,.tabbtn{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <h1>Client feedback: what drives a high score</h1>
+    <p class="sub">120/80 GROUP relationship assessment &middot; 2025 and 2026 &middot; 59 responses across 35 client accounts</p>
+  </div>
+  <button class="themebtn" id="themebtn">Dark mode</button>
+</header>
+
+<div class="answer">
+  <h2>The short answer</h2>
+  <p class="sub" style="margin-bottom:2px">Which qualities correlate with a high score. Four findings, both years agree.</p>
+  <ol>
+    <li><span class="k">Strategy has the largest effect on the score.</span> In 2026, clients who identified strategic thinking as a strength averaged <b>9.1</b>. Clients who asked us to improve it averaged <b>7.2</b>. That 1.9-point difference is the largest of any quality, and 2025 shows the same pattern.</li>
+    <li><span class="k">Proactivity is our weakest quality and the one most closely linked to loyalty.</span> Of the three qualities clients rate directly, proactivity scores lowest in both years, 7.8 then 7.9. It also lines up most closely with whether a client says they would recommend us: in 2026 the ten clients who rated our proactivity 9 or 10 gave us a perfect 10 on recommending us, while the three who rated it 6 or below gave an average of 6.0. Understanding of their business and our tools follow the same direction but less tightly, meaning a client can rate those two highly and still stop short of recommending us. Section 1 breaks this down.</li>
+    <li><span class="k">Client service is expected rather than distinguishing.</span> Around 90% of clients identify it as a strength regardless of the score they give us, and almost nobody asks us to improve it. It protects the relationship but it does not raise the score.</li>
+    <li><span class="k">Low and high raters are asking for different things.</span> Low raters want strategy and results. High raters, when they ask for anything, want measurement and sharper writing. Two different conversations.</li>
+  </ol>
+</div>
+
+<div class="howto">
+  <h3>Before you scroll</h3>
+  <ul>
+    <li>Every chart opens as a <b>table</b>. Use the <b>Chart</b> button on any card to switch to the visual, and back again.</li>
+    <li>The <b>Year</b> and <b>Agency</b> controls below re-filter the whole page. Sections 1, 2 and 4 change with them, so a single-year chart can be compared to the other year by switching the toggle.</li>
+    <li>Section 3 always shows both years and both agencies side by side, whatever the filters say.</li>
+  </ul>
+</div>
+
+<div class="filters" role="group" aria-label="Dashboard filters">
+  <div class="fgroup">
+    <span class="flabel">Year</span>
+    <div class="seg" id="fyear"></div>
+  </div>
+  <div class="fgroup">
+    <span class="flabel">Agency</span>
+    <div class="seg" id="fagency"></div>
+  </div>
+  <span class="scopenote" id="scopenote"></span>
+</div>
+
+<div class="tiles" id="tiles"></div>
+
+<div class="hero" id="hero"></div>
+
+<!-- SECTION 1 -->
+<div class="sectitle">
+  <div class="n">Section 1</div>
+  <h2>Which qualities drive the score</h2>
+  <p class="sub">Two ways of asking the same question. Both point to strategy and proactivity.</p>
+</div>
+
+<div class="card">
+  <header>
+    <h3>How closely each quality tracks whether a client would recommend us
+      <button class="tabbtn" data-pair="track">Chart</button></h3>
+  </header>
+  <div class="scalekey">
+    <b>How to read this.</b> Every client gave us a 1-to-10 rating on each quality, and separately a 1-to-10 answer to
+    "would you recommend us." Grouping clients by the rating they gave a quality shows what those same clients said about
+    recommending us. A quality where the low group and the high group are far apart is a quality that moves loyalty.
+    One where both groups answer about the same does not.
+  </div>
+  <div id="c-track" class="hidden"></div>
+  <div id="t-track"></div>
+  <div class="takeaway" id="k-track"></div>
+</div>
+
+<div class="card">
+  <header>
+    <h3>Correlation, side by side with how well we perform
+      <button class="tabbtn" data-pair="quad">Chart</button></h3>
+  </header>
+  <div class="scalekey">
+    <b>Two different scales.</b> The left column is a <b>correlation</b>, which runs from 0 to 1: 0 means the two answers
+    have no relationship, 1 means they move in perfect step. The right column is an <b>average rating out of 10</b>,
+    straight from the survey. High correlation with a low rating is the combination worth acting on.
+    <br><br>
+    <b>What the qualities mean.</b> <b>Proactivity</b> is the survey question on surfacing new opportunities and ideas and
+    up-levelling existing work. <b>Business understanding</b> is the question on how well the team understands the client's
+    business. <b>Tools and processes</b> is the question on whether we use good systems to communicate and manage work.
+  </div>
+  <div id="c-quad" class="hidden"></div>
+  <div id="t-quad"></div>
+  <div class="takeaway" id="k-quad"></div>
+</div>
+
+<div class="card">
+  <header>
+    <h3>Score difference by quality
+      <button class="tabbtn" data-pair="lift">Chart</button></h3>
+  </header>
+  <div class="scalekey">
+    <b>What the plus and minus mean.</b> These are not survey answers. For each quality we take the average overall score
+    of the clients who checked it, then subtract the average score of everyone who did not.
+    <b>A positive number</b> means clients who value that quality score us higher than average.
+    <b>A negative number</b> means clients asking us to improve it score us lower than average.
+    The further from zero, the more that quality separates a happy client from an unhappy one.
+    Qualities with fewer than two clients on either side are left out.
+  </div>
+  <div class="legend">
+    <span><i class="sw" style="background:var(--s1)"></i>Identified it as a strength</span>
+    <span><i class="sw" style="background:var(--s2)"></i>Asked us to improve it</span>
+  </div>
+  <div id="c-lift" class="hidden"></div>
+  <div id="t-lift"></div>
+  <div class="takeaway" id="k-lift"></div>
+</div>
+
+<!-- SECTION 2 -->
+<div class="sectitle">
+  <div class="n">Section 2</div>
+  <h2>High raters vs low raters</h2>
+  <p class="sub">The two questions side by side. High is an average score of 9.0 or better, low is under 7.0.</p>
+</div>
+
+<div class="card">
+  <header>
+    <h3>What they say we do well
+      <button class="tabbtn" data-pair="well">Chart</button></h3>
+    <p class="dim">Share of each group that selected the quality as something we do well.</p>
+  </header>
+  <div class="legend" id="l-well"></div>
+  <div id="c-well" class="hidden"></div>
+  <div id="t-well"></div>
+  <div class="takeaway" id="k-well"></div>
+</div>
+
+<div class="card">
+  <header>
+    <h3>What they say we could do better
+      <button class="tabbtn" data-pair="better">Chart</button></h3>
+    <p class="dim">Share of each group that selected the quality as something to improve.</p>
+  </header>
+  <div class="legend" id="l-better"></div>
+  <div id="c-better" class="hidden"></div>
+  <div id="t-better"></div>
+  <div class="takeaway" id="k-better"></div>
+</div>
+
+<div class="card">
+  <header><h3>Who is in each group</h3></header>
+  <div class="grid3" id="segrosters"></div>
+  <div class="takeaway" id="k-seg"></div>
+</div>
+
+<!-- SECTION 3 -->
+<div class="sectitle">
+  <div class="n">Section 3</div>
+  <h2>Year over year, and agency by agency</h2>
+  <p class="sub">These two views always show the full comparison, whatever the filters above are set to.</p>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <header>
+      <h3>2025 vs 2026
+        <button class="tabbtn" data-pair="yoy">Chart</button></h3>
+      <p class="dim">All agencies, average rating out of 10 per question.</p>
+    </header>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--s1)"></i>2025</span>
+      <span><i class="sw" style="background:var(--s2)"></i>2026</span>
+    </div>
+    <div id="c-yoy" class="hidden"></div>
+    <div id="t-yoy"></div>
+  </div>
+  <div class="card">
+    <header>
+      <h3>MKTG vs AOX3
+        <button class="tabbtn" data-pair="ag">Chart</button></h3>
+      <p class="dim" id="agsub">Average rating out of 10 per question.</p>
+    </header>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--s1)"></i>MKTG</span>
+      <span><i class="sw" style="background:var(--s2)"></i>AOX3</span>
+    </div>
+    <div id="c-ag" class="hidden"></div>
+    <div id="t-ag"></div>
+  </div>
+</div>
+
+<div class="card">
+  <header><h3>Agency snapshot, both years</h3></header>
+  <div id="agsnap"></div>
+  <div class="takeaway" id="k-cmp"></div>
+</div>
+
+<!-- SECTION 4 -->
+<div class="sectitle">
+  <div class="n">Section 4</div>
+  <h2>In their own words</h2>
+  <p class="sub">Every written answer, tagged by the group the client falls into. Filtered by the year and agency above.</p>
+</div>
+
+<div class="card">
+  <div class="takeaway" id="k-quotes" style="margin-top:0;margin-bottom:18px"></div>
+  <div class="qfilters" id="qfilters"></div>
+  <div class="qgrid" id="quotes"></div>
+</div>
+
+<!-- SECTION 5 -->
+<div class="sectitle">
+  <div class="n">Section 5</div>
+  <h2>What to do about it</h2>
+  <p class="sub">Five moves the data supports. Each one names the number behind it.</p>
+</div>
+<div class="card">
+  <div class="grid2">
+    <div>
+      <h4>1. Build a strategy moment into every retainer</h4>
+      <p class="dim" style="margin-top:4px">Strategy produces the widest score difference we measure: +1.9 for clients who identify it as a strength, &minus;1.9 for clients who ask for more of it. Nobody in the high group asked for better strategy. A standing quarterly session where we bring the recommendation rather than take the brief is the most efficient way to move a passive client into a promoter. Three clients raised this unprompted: <b>Machinify</b> wrote "we're pulling work out of you rather than having you drive us," <b>Infinitus</b> wrote "most of the strategy is coming from our team," and <b>epocrates</b> wrote they are not getting "the same proactive coverage and ideation."</p>
+    </div>
+    <div>
+      <h4>2. Manage proactivity as a tracked metric</h4>
+      <p class="dim" style="margin-top:4px">It is our lowest rated quality two years running, 7.8 then 7.9, and it aligns with the recommend score more closely than business understanding or tools do. Every other rated question improved in 2026. This one did not. If one metric belongs on a monthly review, this is it.</p>
+    </div>
+    <div>
+      <h4>3. Lead renewal conversations with results, not service</h4>
+      <p class="dim" style="margin-top:4px">93% of clients identify client service as a strength and almost none ask us to improve it, so it no longer distinguishes us. Results is the opposite: 39% want it stronger, and it produces the second largest score difference. Renewal conversations should open with the coverage and pipeline story rather than responsiveness.</p>
+    </div>
+    <div>
+      <h4>4. Give measurement to the clients who are already satisfied</h4>
+      <p class="dim" style="margin-top:4px">Measurement is the one area high raters request more often than low raters: 42% of the high group flagged it against 25% of the low group. These are the clients defending our budget internally. <b>COTA</b> stated it directly, asking how to measure impact "in an evidence based way" to support the case for expanding services. Stronger reporting here protects revenue rather than recovering it.</p>
+    </div>
+    <div>
+      <h4>5. Address the four low accounts individually</h4>
+      <p class="dim" style="margin-top:4px">The 2026 low group is four responses and their reasons differ. <b>Infinitus</b> and <b>epocrates</b> want strategic ownership. <b>Optura</b> wants results and clearer scope. <b>Lantern</b> wants proactive ideas and analytics. Averaging them obscures the fix. Each needs its own conversation.</p>
+    </div>
+    <div>
+      <h4>Worth a closer look</h4>
+      <p class="dim" style="margin-top:4px">Problem-solving behaves like a threshold quality. Clients who identify it as a strength score only modestly above average, but the three who asked us to improve it score 1.4 points below average. It appears to cost us more when it is missing than it gains us when it is present, which puts it closer to strategy than to writing quality in terms of priority.</p>
+    </div>
+  </div>
+  <div class="note">
+    <b>A note on sample size.</b> 28 responses in 2026 and 31 in 2025 is a small base, and the low group is four people in each year. Everything here is directional. The patterns are worth acting on because both years point the same way, not because any individual percentage is precise. Raising the response rate above 45% would improve next year's analysis more than any new question would.
+  </div>
+</div>
+
+<!-- SECTION 6 -->
+<div class="sectitle">
+  <div class="n">Section 6</div>
+  <h2>Every response</h2>
+  <p class="sub">Click a column heading to sort. Filtered by the year and agency above.</p>
+</div>
+<div class="card">
+  <div class="scroll" id="roster"></div>
+  <div class="note" id="method"></div>
+</div>
+
+</div>
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+const DATA = {"canon":["Client Service","Communication","Measurement & ROI","Results","Strategy","Problem-Solving","Timeliness","Writing Quality"],"dims":[["overall","Overall performance"],["proactive","Proactivity & new ideas"],["understanding","Understanding of your business"],["tools","Tools & processes"],["recommend","Would recommend us"]],"scopes":{"2025|All":{"n":31,"clients":23,"avg":8.26,"nps":65,"P":21,"A":9,"D":1,"pP":68,"pA":29,"pD":3,"roi":84,"dims":{"overall":8.1,"proactive":7.84,"understanding":8.42,"tools":8.13,"recommend":8.84},"corr":{"overall":0.794,"proactive":0.582,"understanding":0.331,"tools":0.349},"well":{"Client Service":87,"Communication":84,"Measurement & ROI":26,"Results":61,"Strategy":65,"Problem-Solving":0,"Timeliness":58,"Writing Quality":35},"better":{"Client Service":3,"Communication":10,"Measurement & ROI":35,"Results":32,"Strategy":32,"Problem-Solving":0,"Timeliness":19,"Writing Quality":39},"segs":{"High":{"n":8,"avg":9.32,"well":{"Client Service":100,"Communication":100,"Measurement & ROI":25,"Results":88,"Strategy":100,"Problem-Solving":0,"Timeliness":75,"Writing Quality":38},"better":{"Client Service":0,"Communication":0,"Measurement & ROI":25,"Results":12,"Strategy":0,"Problem-Solving":0,"Timeliness":12,"Writing Quality":50},"clients":["Abridge","Blue Shield of California","CareRev","Cityblock Health","Hume AI","Omada Health","Personify Health"]},"Mid":{"n":19,"avg":8.24,"well":{"Client Service":95,"Communication":84,"Measurement & ROI":32,"Results":63,"Strategy":58,"Problem-Solving":0,"Timeliness":58,"Writing Quality":42},"better":{"Client Service":0,"Communication":11,"Measurement & ROI":32,"Results":32,"Strategy":32,"Problem-Solving":0,"Timeliness":16,"Writing Quality":32},"clients":["Aegis Ventures","Athenahealth","Blue Shield of California","CHAI","COTA","Capital Rx / Judi Health","Cedar","CodaMetrix","Color","Infinitus","Innovaccer","Papa","Personify Health","Regard","Synergie"]},"Low":{"n":4,"avg":6.25,"well":{"Client Service":25,"Communication":50,"Measurement & ROI":0,"Results":0,"Strategy":25,"Problem-Solving":0,"Timeliness":25,"Writing Quality":0},"better":{"Client Service":25,"Communication":25,"Measurement & ROI":75,"Results":75,"Strategy":100,"Problem-Solving":0,"Timeliness":50,"Writing Quality":50},"clients":["Charlie Health","Datavant","Infinitus","Machinify"]}},"lift":{"Client Service":{"nw":27,"well_avg":8.53,"well_lift":2.03,"nb":1,"better_avg":6.4,"better_lift":null},"Communication":{"nw":26,"well_avg":8.42,"well_lift":0.94,"nb":3,"better_avg":7.47,"better_lift":-0.88},"Measurement & ROI":{"nw":8,"well_avg":8.78,"well_lift":0.69,"nb":11,"better_avg":8.0,"better_lift":-0.41},"Results":{"nw":19,"well_avg":8.67,"well_lift":1.06,"nb":10,"better_avg":7.54,"better_lift":-1.07},"Strategy":{"nw":20,"well_avg":8.58,"well_lift":0.89,"nb":10,"better_avg":7.38,"better_lift":-1.31},"Problem-Solving":{"nw":0,"well_avg":null,"well_lift":null,"nb":0,"better_avg":null,"better_lift":null},"Timeliness":{"nw":18,"well_avg":8.57,"well_lift":0.72,"nb":6,"better_avg":7.73,"better_lift":-0.66},"Writing Quality":{"nw":11,"well_avg":8.6,"well_lift":0.52,"nb":12,"better_avg":8.32,"better_lift":0.09}},"track":{"overall":{"low":{"n":3,"rec":6.7,"prom":0},"mid":{"n":18,"rec":8.7,"prom":11},"high":{"n":10,"rec":9.8,"prom":10}},"proactive":{"low":{"n":4,"rec":7.8,"prom":2},"mid":{"n":15,"rec":8.5,"prom":7},"high":{"n":12,"rec":9.7,"prom":12}},"understanding":{"low":{"n":2,"rec":9.5,"prom":2},"mid":{"n":15,"rec":8.3,"prom":8},"high":{"n":14,"rec":9.4,"prom":11}},"tools":{"low":{"n":5,"rec":7.6,"prom":2},"mid":{"n":11,"rec":8.8,"prom":7},"high":{"n":15,"rec":9.3,"prom":12}}}},"2025|MKTG":{"n":18,"clients":14,"avg":8.18,"nps":56,"P":11,"A":6,"D":1,"pP":61,"pA":33,"pD":6,"roi":83,"dims":{"overall":8.11,"proactive":7.44,"understanding":8.67,"tools":7.89,"recommend":8.78},"corr":{"overall":0.862,"proactive":0.524,"understanding":0.62,"tools":0.309},"well":{"Client Service":83,"Communication":83,"Measurement & ROI":28,"Results":56,"Strategy":72,"Problem-Solving":0,"Timeliness":56,"Writing Quality":50},"better":{"Client Service":6,"Communication":6,"Measurement & ROI":39,"Results":44,"Strategy":22,"Problem-Solving":0,"Timeliness":28,"Writing Quality":39},"segs":{"High":{"n":5,"avg":9.28,"well":{"Client Service":100,"Communication":100,"Measurement & ROI":40,"Results":80,"Strategy":100,"Problem-Solving":0,"Timeliness":60,"Writing Quality":60},"better":{"Client Service":0,"Communication":0,"Measurement & ROI":20,"Results":20,"Strategy":0,"Problem-Solving":0,"Timeliness":20,"Writing Quality":60},"clients":["CareRev","Cityblock Health","Omada Health","Personify Health"]},"Mid":{"n":10,"avg":8.26,"well":{"Client Service":100,"Communication":90,"Measurement & ROI":30,"Results":60,"Strategy":70,"Problem-Solving":0,"Timeliness":60,"Writing Quality":60},"better":{"Client Service":0,"Communication":0,"Measurement & ROI":40,"Results":50,"Strategy":10,"Problem-Solving":0,"Timeliness":20,"Writing Quality":20},"clients":["Aegis Ventures","Capital Rx / Judi Health","CodaMetrix","Color","Innovaccer","Papa","Personify Health","Regard"]},"Low":{"n":3,"avg":6.07,"well":{"Client Service":0,"Communication":33,"Measurement & ROI":0,"Results":0,"Strategy":33,"Problem-Solving":0,"Timeliness":33,"Writing Quality":0},"better":{"Client Service":33,"Communication":33,"Measurement & ROI":67,"Results":67,"Strategy":100,"Problem-Solving":0,"Timeliness":67,"Writing Quality":67},"clients":["Charlie Health","Datavant","Machinify"]}},"lift":{"Client Service":{"nw":15,"well_avg":8.6,"well_lift":2.53,"nb":1,"better_avg":6.4,"better_lift":null},"Communication":{"nw":15,"well_avg":8.37,"well_lift":1.17,"nb":1,"better_avg":6.4,"better_lift":null},"Measurement & ROI":{"nw":5,"well_avg":8.84,"well_lift":0.92,"nb":7,"better_avg":7.91,"better_lift":-0.43},"Results":{"nw":10,"well_avg":8.68,"well_lift":1.13,"nb":8,"better_avg":7.65,"better_lift":-0.95},"Strategy":{"nw":13,"well_avg":8.46,"well_lift":1.02,"nb":4,"better_avg":6.6,"better_lift":-2.03},"Problem-Solving":{"nw":0,"well_avg":null,"well_lift":null,"nb":0,"better_avg":null,"better_lift":null},"Timeliness":{"nw":10,"well_avg":8.46,"well_lift":0.64,"nb":5,"better_avg":7.8,"better_lift":-0.52},"Writing Quality":{"nw":9,"well_avg":8.69,"well_lift":1.02,"nb":7,"better_avg":8.0,"better_lift":-0.29}},"track":{"overall":{"low":{"n":2,"rec":6.5,"prom":0},"mid":{"n":9,"rec":8.4,"prom":4},"high":{"n":7,"rec":9.9,"prom":7}},"proactive":{"low":{"n":3,"rec":8.0,"prom":2},"mid":{"n":11,"rec":8.6,"prom":5},"high":{"n":4,"rec":9.8,"prom":4}},"understanding":{"low":{"n":0,"rec":null,"prom":0},"mid":{"n":9,"rec":8.1,"prom":4},"high":{"n":9,"rec":9.4,"prom":7}},"tools":{"low":{"n":3,"rec":7.3,"prom":1},"mid":{"n":8,"rec":8.9,"prom":5},"high":{"n":7,"rec":9.3,"prom":5}}}},"2025|AOX3":{"n":13,"clients":9,"avg":8.38,"nps":77,"P":10,"A":3,"D":0,"pP":77,"pA":23,"pD":0,"roi":85,"dims":{"overall":8.08,"proactive":8.38,"understanding":8.08,"tools":8.46,"recommend":8.92},"corr":{"overall":0.668,"proactive":0.728,"understanding":0.005,"tools":0.427},"well":{"Client Service":92,"Communication":85,"Measurement & ROI":23,"Results":69,"Strategy":54,"Problem-Solving":0,"Timeliness":62,"Writing Quality":15},"better":{"Client Service":0,"Communication":15,"Measurement & ROI":31,"Results":15,"Strategy":46,"Problem-Solving":0,"Timeliness":8,"Writing Quality":38},"segs":{"High":{"n":3,"avg":9.4,"well":{"Client Service":100,"Communication":100,"Measurement & ROI":0,"Results":100,"Strategy":100,"Problem-Solving":0,"Timeliness":100,"Writing Quality":0},"better":{"Client Service":0,"Communication":0,"Measurement & ROI":33,"Results":0,"Strategy":0,"Problem-Solving":0,"Timeliness":0,"Writing Quality":33},"clients":["Abridge","Blue Shield of California","Hume AI"]},"Mid":{"n":9,"avg":8.22,"well":{"Client Service":89,"Communication":78,"Measurement & ROI":33,"Results":67,"Strategy":44,"Problem-Solving":0,"Timeliness":56,"Writing Quality":22},"better":{"Client Service":0,"Communication":22,"Measurement & ROI":22,"Results":11,"Strategy":56,"Problem-Solving":0,"Timeliness":11,"Writing Quality":44},"clients":["Athenahealth","Blue Shield of California","CHAI","COTA","Cedar","Infinitus","Synergie"]},"Low":{"n":1,"avg":6.8,"well":{"Client Service":100,"Communication":100,"Measurement & ROI":0,"Results":0,"Strategy":0,"Problem-Solving":0,"Timeliness":0,"Writing Quality":0},"better":{"Client Service":0,"Communication":0,"Measurement & ROI":100,"Results":100,"Strategy":100,"Problem-Solving":0,"Timeliness":0,"Writing Quality":0},"clients":["Infinitus"]}},"lift":{"Client Service":{"nw":12,"well_avg":8.43,"well_lift":null,"nb":0,"better_avg":null,"better_lift":null},"Communication":{"nw":11,"well_avg":8.47,"well_lift":0.57,"nb":2,"better_avg":8.0,"better_lift":-0.45},"Measurement & ROI":{"nw":3,"well_avg":8.67,"well_lift":0.37,"nb":4,"better_avg":8.15,"better_lift":-0.34},"Results":{"nw":9,"well_avg":8.67,"well_lift":0.92,"nb":2,"better_avg":7.1,"better_lift":-1.52},"Strategy":{"nw":7,"well_avg":8.8,"well_lift":0.9,"nb":6,"better_avg":7.9,"better_lift":-0.9},"Problem-Solving":{"nw":0,"well_avg":null,"well_lift":null,"nb":0,"better_avg":null,"better_lift":null},"Timeliness":{"nw":8,"well_avg":8.7,"well_lift":0.82,"nb":1,"better_avg":7.4,"better_lift":null},"Writing Quality":{"nw":2,"well_avg":8.2,"well_lift":-0.22,"nb":5,"better_avg":8.76,"better_lift":0.61}},"track":{"overall":{"low":{"n":1,"rec":7.0,"prom":0},"mid":{"n":9,"rec":8.9,"prom":7},"high":{"n":3,"rec":9.7,"prom":3}},"proactive":{"low":{"n":1,"rec":7.0,"prom":0},"mid":{"n":4,"rec":8.0,"prom":2},"high":{"n":8,"rec":9.6,"prom":8}},"understanding":{"low":{"n":2,"rec":9.5,"prom":2},"mid":{"n":6,"rec":8.5,"prom":4},"high":{"n":5,"rec":9.2,"prom":4}},"tools":{"low":{"n":2,"rec":8.0,"prom":1},"mid":{"n":3,"rec":8.7,"prom":2},"high":{"n":8,"rec":9.2,"prom":7}}}},"2026|All":{"n":28,"clients":23,"avg":8.5,"nps":64,"P":21,"A":4,"D":3,"pP":75,"pA":14,"pD":11,"roi":89,"dims":{"overall":8.36,"proactive":7.89,"understanding":8.71,"tools":8.54,"recommend":9.0},"corr":{"overall":0.856,"proactive":0.775,"understanding":0.722,"tools":0.692},"well":{"Client Service":93,"Communication":0,"Measurement & ROI":36,"Results":54,"Strategy":68,"Problem-Solving":64,"Timeliness":71,"Writing Quality":32},"better":{"Client Service":0,"Communication":0,"Measurement & ROI":36,"Results":39,"Strategy":29,"Problem-Solving":11,"Timeliness":7,"Writing Quality":21},"segs":{"High":{"n":12,"avg":9.68,"well":{"Client Service":100,"Communication":0,"Measurement & ROI":50,"Results":58,"Strategy":100,"Problem-Solving":75,"Timeliness":67,"Writing Quality":58},"better":{"Client Service":0,"Communication":0,"Measurement & ROI":42,"Results":25,"Strategy":0,"Problem-Solving":0,"Timeliness":8,"Writing Quality":17},"clients":["Astrin Biosciences","CHAI","Capital Rx / Judi Health","Cityblock Health","Papa","Parker Institute (PICI)","Rad AI","Rainfall Health","Withings"]},"Mid":{"n":12,"avg":8.17,"well":{"Client Service":92,"Communication":0,"Measurement & ROI":33,"Results":58,"Strategy":50,"Problem-Solving":58,"Timeliness":83,"Writing Quality":17},"better":{"Client Service":0,"Communication":0,"Measurement & ROI":33,"Results":42,"Strategy":42,"Problem-Solving":17,"Timeliness":8,"Writing Quality":17},"clients":["Aegis Ventures","Artisight","Athenahealth","Blue Shield of California","CodaMetrix","Datavant","LeanTaaS","Machinify","Pittsburgh Life Sciences Alliance","Rad AI","Twin Health","Withings"]},"Low":{"n":4,"avg":5.95,"well":{"Client Service":75,"Communication":0,"Measurement & ROI":0,"Results":25,"Strategy":25,"Problem-Solving":50,"Timeliness":50,"Writing Quality":0},"better":{"Client Service":0,"Communication":0,"Measurement & ROI":25,"Results":75,"Strategy":75,"Problem-Solving":25,"Timeliness":0,"Writing Quality":50},"clients":["Infinitus","Lantern","Optura","athenahealth (epocrates)"]}},"lift":{"Client Service":{"nw":26,"well_avg":8.59,"well_lift":1.29,"nb":0,"better_avg":null,"better_lift":null},"Communication":{"nw":0,"well_avg":null,"well_lift":null,"nb":0,"better_avg":null,"better_lift":null},"Measurement & ROI":{"nw":10,"well_avg":9.12,"well_lift":0.96,"nb":10,"better_avg":8.4,"better_lift":-0.16},"Results":{"nw":15,"well_avg":8.84,"well_lift":0.73,"nb":11,"better_avg":7.91,"better_lift":-0.97},"Strategy":{"nw":19,"well_avg":9.12,"well_lift":1.92,"nb":8,"better_avg":7.12,"better_lift":-1.93},"Problem-Solving":{"nw":18,"well_avg":8.79,"well_lift":0.81,"nb":3,"better_avg":7.27,"better_lift":-1.38},"Timeliness":{"nw":20,"well_avg":8.5,"well_lift":0.0,"nb":2,"better_avg":8.9,"better_lift":0.43},"Writing Quality":{"nw":9,"well_avg":9.29,"well_lift":1.16,"nb":6,"better_avg":8.03,"better_lift":-0.59}},"track":{"overall":{"low":{"n":5,"rec":6.2,"prom":0},"mid":{"n":9,"rec":9.1,"prom":7},"high":{"n":14,"rec":9.9,"prom":14}},"proactive":{"low":{"n":3,"rec":6.0,"prom":0},"mid":{"n":15,"rec":8.9,"prom":11},"high":{"n":10,"rec":10.0,"prom":10}},"understanding":{"low":{"n":2,"rec":6.0,"prom":0},"mid":{"n":9,"rec":8.3,"prom":5},"high":{"n":17,"rec":9.7,"prom":16}},"tools":{"low":{"n":2,"rec":6.5,"prom":0},"mid":{"n":12,"rec":8.2,"prom":7},"high":{"n":14,"rec":10.0,"prom":14}}}},"2026|MKTG":{"n":12,"clients":9,"avg":9.08,"nps":92,"P":11,"A":1,"D":0,"pP":92,"pA":8,"pD":0,"roi":92,"dims":{"overall":9.0,"proactive":8.67,"understanding":9.33,"tools":8.92,"recommend":9.5},"corr":{"overall":0.864,"proactive":0.66,"understanding":0.34,"tools":0.608},"well":{"Client Service":100,"Communication":0,"Measurement & ROI":50,"Results":58,"Strategy":83,"Problem-Solving":75,"Timeliness":92,"Writing Quality":67},"better":{"Client Service":0,"Communication":0,"Measurement & ROI":33,"Results":42,"Strategy":17,"Problem-Solving":17,"Timeliness":0,"Writing Quality":0},"segs":{"High":{"n":7,"avg":9.8,"well":{"Client Service":100,"Communication":0,"Measurement & ROI":57,"Results":71,"Strategy":100,"Problem-Solving":86,"Timeliness":86,"Writing Quality":86},"better":{"Client Service":0,"Communication":0,"Measurement & ROI":29,"Results":29,"Strategy":0,"Problem-Solving":0,"Timeliness":0,"Writing Quality":0},"clients":["Astrin Biosciences","Capital Rx / Judi Health","Cityblock Health","Papa","Rad AI"]},"Mid":{"n":5,"avg":8.08,"well":{"Client Service":100,"Communication":0,"Measurement & ROI":40,"Results":40,"Strategy":60,"Problem-Solving":60,"Timeliness":100,"Writing Quality":40},"better":{"Client Service":0,"Communication":0,"Measurement & ROI":40,"Results":60,"Strategy":40,"Problem-Solving":40,"Timeliness":0,"Writing Quality":0},"clients":["Aegis Ventures","CodaMetrix","Datavant","Machinify","Rad AI"]},"Low":{"n":0,"avg":null,"well":{},"better":{},"clients":[]}},"lift":{"Client Service":{"nw":12,"well_avg":9.08,"well_lift":null,"nb":0,"better_avg":null,"better_lift":null},"Communication":{"nw":0,"well_avg":null,"well_lift":null,"nb":0,"better_avg":null,"better_lift":null},"Measurement & ROI":{"nw":6,"well_avg":9.37,"well_lift":0.57,"nb":4,"better_avg":8.55,"better_lift":-0.8},"Results":{"nw":7,"well_avg":9.46,"well_lift":0.9,"nb":5,"better_avg":8.68,"better_lift":-0.69},"Strategy":{"nw":10,"well_avg":9.36,"well_lift":1.66,"nb":2,"better_avg":7.7,"better_lift":-1.66},"Problem-Solving":{"nw":9,"well_avg":9.31,"well_lift":0.91,"nb":2,"better_avg":7.9,"better_lift":-1.42},"Timeliness":{"nw":11,"well_avg":9.0,"well_lift":null,"nb":0,"better_avg":null,"better_lift":null},"Writing Quality":{"nw":8,"well_avg":9.32,"well_lift":0.72,"nb":0,"better_avg":null,"better_lift":null}},"track":{"overall":{"low":{"n":1,"rec":7.0,"prom":0},"mid":{"n":3,"rec":9.3,"prom":3},"high":{"n":8,"rec":9.9,"prom":8}},"proactive":{"low":{"n":0,"rec":null,"prom":0},"mid":{"n":5,"rec":8.8,"prom":4},"high":{"n":7,"rec":10.0,"prom":7}},"understanding":{"low":{"n":0,"rec":null,"prom":0},"mid":{"n":3,"rec":9.3,"prom":3},"high":{"n":9,"rec":9.6,"prom":8}},"tools":{"low":{"n":0,"rec":null,"prom":0},"mid":{"n":5,"rec":8.8,"prom":4},"high":{"n":7,"rec":10.0,"prom":7}}}},"2026|AOX3":{"n":16,"clients":14,"avg":8.06,"nps":44,"P":10,"A":3,"D":3,"pP":62,"pA":19,"pD":19,"roi":88,"dims":{"overall":7.88,"proactive":7.31,"understanding":8.25,"tools":8.25,"recommend":8.62},"corr":{"overall":0.881,"proactive":0.777,"understanding":0.782,"tools":0.708},"well":{"Client Service":88,"Communication":0,"Measurement & ROI":25,"Results":50,"Strategy":56,"Problem-Solving":56,"Timeliness":56,"Writing Quality":6},"better":{"Client Service":0,"Communication":0,"Measurement & ROI":38,"Results":38,"Strategy":38,"Problem-Solving":6,"Timeliness":12,"Writing Quality":38},"segs":{"High":{"n":5,"avg":9.52,"well":{"Client Service":100,"Communication":0,"Measurement & ROI":40,"Results":40,"Strategy":100,"Problem-Solving":60,"Timeliness":40,"Writing Quality":20},"better":{"Client Service":0,"Communication":0,"Measurement & ROI":60,"Results":20,"Strategy":0,"Problem-Solving":0,"Timeliness":20,"Writing Quality":40},"clients":["CHAI","Parker Institute (PICI)","Rainfall Health","Withings"]},"Mid":{"n":7,"avg":8.23,"well":{"Client Service":86,"Communication":0,"Measurement & ROI":29,"Results":71,"Strategy":43,"Problem-Solving":57,"Timeliness":71,"Writing Quality":0},"better":{"Client Service":0,"Communication":0,"Measurement & ROI":29,"Results":29,"Strategy":43,"Problem-Solving":0,"Timeliness":14,"Writing Quality":29},"clients":["Artisight","Athenahealth","Blue Shield of California","LeanTaaS","Pittsburgh Life Sciences Alliance","Twin Health","Withings"]},"Low":{"n":4,"avg":5.95,"well":{"Client Service":75,"Communication":0,"Measurement & ROI":0,"Results":25,"Strategy":25,"Problem-Solving":50,"Timeliness":50,"Writing Quality":0},"better":{"Client Service":0,"Communication":0,"Measurement & ROI":25,"Results":75,"Strategy":75,"Problem-Solving":25,"Timeliness":0,"Writing Quality":50},"clients":["Infinitus","Lantern","Optura","athenahealth (epocrates)"]}},"lift":{"Client Service":{"nw":14,"well_avg":8.17,"well_lift":0.87,"nb":0,"better_avg":null,"better_lift":null},"Communication":{"nw":0,"well_avg":null,"well_lift":null,"nb":0,"better_avg":null,"better_lift":null},"Measurement & ROI":{"nw":4,"well_avg":8.75,"well_lift":0.92,"nb":6,"better_avg":8.3,"better_lift":0.38},"Results":{"nw":8,"well_avg":8.3,"well_lift":0.48,"nb":6,"better_avg":7.27,"better_lift":-1.27},"Strategy":{"nw":9,"well_avg":8.84,"well_lift":1.79,"nb":6,"better_avg":6.93,"better_lift":-1.81},"Problem-Solving":{"nw":9,"well_avg":8.27,"well_lift":0.47,"nb":1,"better_avg":6.0,"better_lift":null},"Timeliness":{"nw":9,"well_avg":7.89,"well_lift":-0.4,"nb":2,"better_avg":8.9,"better_lift":0.96},"Writing Quality":{"nw":1,"well_avg":9.0,"well_lift":null,"nb":6,"better_avg":8.03,"better_lift":-0.05}},"track":{"overall":{"low":{"n":4,"rec":6.0,"prom":0},"mid":{"n":6,"rec":9.0,"prom":4},"high":{"n":6,"rec":10.0,"prom":6}},"proactive":{"low":{"n":3,"rec":6.0,"prom":0},"mid":{"n":10,"rec":9.0,"prom":7},"high":{"n":3,"rec":10.0,"prom":3}},"understanding":{"low":{"n":2,"rec":6.0,"prom":0},"mid":{"n":6,"rec":7.8,"prom":2},"high":{"n":8,"rec":9.9,"prom":8}},"tools":{"low":{"n":2,"rec":6.5,"prom":0},"mid":{"n":7,"rec":7.9,"prom":3},"high":{"n":7,"rec":10.0,"prom":7}}}}},"quotes":[{"year":2025,"company":"Blue Shield of California","person":"jonna m constantine","agency":"AOX3","seg":"Mid","score":8.6,"field":"Anything else to share","text":"I feel very lucky to have 120/80 on our side. Elizabeth and Sam are really irreplaceable extended team members for us -- trust their strategy implicitly, know that they work exceptional hard (and fast), deliver results, and can understand/apply their nuance understandings to efforts across the enterprise with ease.\n\nI know the team is very impressed by Alex's work, but I have not worked much with her. It's not clear to me where she sits within the account, but do know that she is a CA media expert. \n\nIt was nice to leverage detailed metrics reports with Richard for Pharmacy. I wish we did some of that work for the larger BSC account segments. \n\nI appreciate that the team continues to show up and drive results, when/where possible. BSC has been a bit hairy for many months now. I hope we're not wearing the 120/80 team too thin -- we want to know how to be better partners, too. I know that's always top of mind for me, and I'm doing my best to bring the team along as things change."},{"year":2025,"company":"COTA","person":"Jaimee Ryan","agency":"AOX3","seg":"Mid","score":8.6,"field":"Anything else to share","text":"I appreciate your willingness to help us work though uncertainty and business strategy changes while maintaining your focus on consistent output and results. I also value your expertise and counsel. You have helped me navigate situations and requests that I would have really struggled to deliver on by myself. I really enjoy working with the entire team!"},{"year":2025,"company":"COTA","person":"Jaimee Ryan","agency":"AOX3","seg":"Mid","score":8.6,"field":"Improvement, in their words","text":"I don't know if this is possible - but it would be helpful if you could provide guidance on how we measure the impact of our work together. I FEEL like we are having an impact and in my gut I KNOW we are making an impact - but how do we go about measuring that in an evidence based way. Would be helpful to support conversations with leadership and making the case for expanding services."},{"year":2025,"company":"Papa","person":"Jill Meadows","agency":"MKTG","seg":"Mid","score":8.8,"field":"Why low on proactivity","text":"This is due to budget cuts on our end \u2013\u00a0fewer resources for always-on, proactive thinking"},{"year":2025,"company":"Papa","person":"Jill Meadows","agency":"MKTG","seg":"Mid","score":8.8,"field":"Anything else to share","text":"Having worked with many different people and teams over the years, I'm continually impressed with the talent at 120/80. Thank you for flexing to meet our needs this year. It's appreciated!"},{"year":2025,"company":"Athenahealth","person":"Adam Brickman","agency":"AOX3","seg":"Mid","score":7.2,"field":"Why low on understanding our business","text":"More of a commentary on the layered complications of our business. 120/80 Team is doing a significant job of attempting to simplifying our narrative."},{"year":2025,"company":"Athenahealth","person":"Adam Brickman","agency":"AOX3","seg":"Mid","score":7.2,"field":"Why low on tools & processes","text":"A referenceable project tracker with visibility would be a valuable addition."},{"year":2025,"company":"Cedar","person":"Brandon Minow","agency":"AOX3","seg":"Mid","score":8.6,"field":"Why low on understanding our business","text":"I think there was a bit of a learning curve as we stood up the partnership. This has improved dramatically across Q2, and I'm satisfied with the level of understanding. But I think it's still a growth opportunity as we continue to deepen relationship"},{"year":2025,"company":"Infinitus","person":"Sarah Baicker","agency":"AOX3","seg":"Mid","score":7.8,"field":"Why not seeing ROI","text":"This is hard to answer only ~4 months in, unfortunately. Going with yes but I think if this were a 1-10 scale I'd be right in the middle."},{"year":2025,"company":"Infinitus","person":"Sarah Baicker","agency":"AOX3","seg":"Mid","score":7.8,"field":"Anything else to share","text":"It's hard to complete a review at this point for me, because a big part of what we're hoping you can help us achieve is to win awards and earn speaking opportunities, but we haven't had much of an opportunity to apply for either yet (and thus, haven't gotten any). We're very pleased with the results from the team's media relations efforts, especially in terms of placing Infinitus in stories even when there is no news hook."},{"year":2025,"company":"Datavant","person":"Lynn Shepherd","agency":"MKTG","seg":"Low","score":6.4,"field":"Why low on proactivity","text":"team's focus has been on executing vs. presenting recommendations/ops"},{"year":2025,"company":"Datavant","person":"Lynn Shepherd","agency":"MKTG","seg":"Low","score":6.4,"field":"Why low on tools & processes","text":"limited visibility to project management tools being used; opportunity to tighten client facing project management process, timelines, ongoing measurement"},{"year":2025,"company":"Datavant","person":"Lynn Shepherd","agency":"MKTG","seg":"Low","score":6.4,"field":"Anything else to share","text":"Senior level counsel is extremely valued; get the sense that the account team is stretched and not clear they are always thinking about us or what they are doing to hit our objectives. Smart people, great to work with and deliver when asked...opportunity to sharpen plan development, project management, proactively sharing opportunities."},{"year":2025,"company":"Datavant","person":"Lynn Shepherd","agency":"MKTG","seg":"Low","score":6.4,"field":"Strength, in their words","text":"media relations"},{"year":2025,"company":"Infinitus","person":"Ankit Jain","agency":"AOX3","seg":"Low","score":6.8,"field":"Why the low overall rating","text":"It's been nice getting to know you and a couple of interesting opportunities. But the impact isn't there yet. The spend to impact ratio isn't where I would have expected so let's turn things around by the end of the year."},{"year":2025,"company":"Infinitus","person":"Ankit Jain","agency":"AOX3","seg":"Low","score":6.8,"field":"Why not seeing ROI","text":"Not yet... same reason as above. Not that many media opps; goofed up experience with that reporter and Zing Health, no awards. Story hasn't really changed. So trying to figure out where the 'big win' can be..."},{"year":2025,"company":"Infinitus","person":"Ankit Jain","agency":"AOX3","seg":"Low","score":6.8,"field":"Why low on proactivity","text":"Maybe I'm not in the weeds, but there aren't too many 'interesting, proactive' opps that I'm seeing."},{"year":2025,"company":"Charlie Health","person":"Jeffrey Allen","agency":"MKTG","seg":"Low","score":5.4,"field":"Why the low overall rating","text":"I don't feel that 5 is \"low\" - however I rated this due to the point we're at in our engagement 1) we haven't seen anything coverage-wise we'd consider \"outstanding\" and 2) we've seen some issues and some areas where getting traction has been slower than desired"},{"year":2025,"company":"Charlie Health","person":"Jeffrey Allen","agency":"MKTG","seg":"Low","score":5.4,"field":"Why not seeing ROI","text":"I think of this objectively - the dollars spent per list of the incremental coverage generated. I know we are early in the relationship so \"ROI\" may lag as we get further onboarded, but this is current perception"},{"year":2025,"company":"Charlie Health","person":"Jeffrey Allen","agency":"MKTG","seg":"Low","score":5.4,"field":"Why low on proactivity","text":"I've yet to see robust proactive planning on how we're going to achieve what we want to achieve (e.g. here's an aggressive approach to success). Can sometimes feel like whack-a-mole vs. holistic proactivity"},{"year":2025,"company":"Charlie Health","person":"Jeffrey Allen","agency":"MKTG","seg":"Low","score":5.4,"field":"Why low on tools & processes","text":"low visibility into the tactics employed to achieve goals. Ex: podcasts - we want to put carter & caroline into more podcasts, we get one-off opps (that are low quality) vs. a communicated plan with target lists, how we're going to win, etc"},{"year":2025,"company":"Charlie Health","person":"Jeffrey Allen","agency":"MKTG","seg":"Low","score":5.4,"field":"Anything else to share","text":"I think we can get there but we're a results-oriented company and right  now we're not there. There have been some rough around the edges issues (missing errors on prep docs, low-quality things). Plus missed coverage that seems right down the fairway for CH. Not clear that 120/80 is really helping us get deeper integration with the reporters & outlets that matter. Many opps and new relationships have been inbound"},{"year":2025,"company":"Athenahealth","person":"Stacy Simpson","agency":"AOX3","seg":"Mid","score":7.4,"field":"Why low on tools & processes","text":"I don't get much direct communication from the team, though it may be getting filtered by my team. But I would like to see more communication, have more insight into what the team is prioritizing and the outcomes that work is driving."},{"year":2025,"company":"Athenahealth","person":"Stacy Simpson","agency":"AOX3","seg":"Mid","score":7.4,"field":"Anything else to share","text":"I think the team is very smart and knows what they are doing. I would like to see us work better collectively to drive high impact results and to move quickly in getting those results."},{"year":2025,"company":"Personify Health","person":"Julie Sculley","agency":"MKTG","seg":"Mid","score":8.4,"field":"Anything else to share","text":"I greatly appreciate the 120 team as both practitioners and people. I feel like we have a great comradery and I view them as \"my team.\" The entire team, including Jen Long, are there for me and Erica when needed.\n\nI view 2024 as more of a foundational year, and I feel like the team has been delivering more (and good quality) media opportunities this year. I think some of that is attributable to understanding our business better, and some is perhaps due to team changes that have occurred, to our benefit. Let's keep the momentum going!\n\nThe team has consistently delivered strong ideas in terms of bylines and media pitches, which is so appreciated. In general, byline and longer form writing has been strong - obviously Jon's work is elite! Press release writing is very good, and has improved since we first started working together in 2024. I think that is due to knowledge of our business and also some shifts in the team.\n\nI'm glad to be working with 120/80!"},{"year":2025,"company":"Personify Health","person":"Julie Sculley","agency":"MKTG","seg":"Mid","score":8.4,"field":"Improvement, in their words","text":"These 2 things are not so much \"better\" but more like there is always room for growth!"},{"year":2025,"company":"CodaMetrix","person":"Carly Rose","agency":"MKTG","seg":"Mid","score":8.2,"field":"Why low on proactivity","text":"I've appreciated how proactive the 120/80 team has been, especially earlier this year when we saw strong momentum with placements like Forbes and Newsweek. That level of energy and connections really stood out. I\u2019ve noticed things have slowed a bit in recent months, and I\u2019d love to see us recapture that Q1 pace. I\u2019ll continue working to provide fresh proof points and customer stories, but keeping a sharp, creative edge on our media strategy remains a top priority for me as we head into the second half of the year."},{"year":2025,"company":"CodaMetrix","person":"Carly Rose","agency":"MKTG","seg":"Mid","score":8.2,"field":"Why low on understanding our business","text":"Continues to grow as we work together and our product / service line roadmap is refined. No concerns here."},{"year":2025,"company":"CodaMetrix","person":"Carly Rose","agency":"MKTG","seg":"Mid","score":8.2,"field":"Anything else to share","text":"I gave an 8 because while 120/80 brings valuable expertise and a strong network in our niche\u2014especially evident early on with strong alignment across our investors and competitors\u2014the investment comes with a high price tag. We\u2019ve seen strong results like mentions in Forbes and Newsweek, but to justify the spend, it\u2019s important we maintain that momentum with consistent media placements and creative thought leadership opportunities, particularly as we look to stay ahead in the evolving RCM space. For H2, I look forward to building on our early wins and delivering a strong second half of the year."},{"year":2025,"company":"CHAI","person":"Lucy Orr-Ewing","agency":"AOX3","seg":"Mid","score":8.4,"field":"Why low on proactivity","text":"I would say you're excellent at proactive responses to anything related to Brian and his calendar. Comms around what our key messages are, things related to the policy workgroup, member communications, presentations or speeches the rest of the team are working on, could be better."},{"year":2025,"company":"CHAI","person":"Lucy Orr-Ewing","agency":"AOX3","seg":"Mid","score":8.4,"field":"Why low on tools & processes","text":"slack is pretty good!"},{"year":2025,"company":"CHAI","person":"Lucy Orr-Ewing","agency":"AOX3","seg":"Mid","score":8.4,"field":"Anything else to share","text":"CHAI has benefitted from your team, your relationships, excellent work ethic (including emergency responses and war-room style planning) hugely. Thank you for all that you do!"},{"year":2025,"company":"Blue Shield of California","person":"Matthew Yi","agency":"AOX3","seg":"High","score":9.2,"field":"Anything else to share","text":"Very much appreciate the great partnership."},{"year":2025,"company":"Blue Shield of California","person":"Matthew Yi","agency":"AOX3","seg":"High","score":9.2,"field":"Improvement, in their words","text":"Writing - more consumer friendly less industry-sounding copy."},{"year":2025,"company":"Aegis Ventures","person":"Glenn Farrell","agency":"MKTG","seg":"Mid","score":8.0,"field":"Improvement, in their words","text":"finding additional media opportunities for Aegis"},{"year":2025,"company":"Capital Rx / Judi Health","person":"Justin Venneri","agency":"MKTG","seg":"Mid","score":8.4,"field":"Anything else to share","text":"I enjoy working with y'all."},{"year":2025,"company":"Color","person":"Andy Kill","agency":"MKTG","seg":"Mid","score":8.2,"field":"Anything else to share","text":"I tried to leave the 2024 section blank since I wasn't at Color at that time, but it wouldn't let me. Overall, I consider 120 a high performing team, very responsive and communicative, and the results overall have been on par with the goals we set out to achieve. I've enjoyed working with the team this year!"},{"year":2025,"company":"Color","person":"Andy Kill","agency":"MKTG","seg":"Mid","score":8.2,"field":"Strength, in their words","text":"See below on  feedback it's selective not overall."},{"year":2025,"company":"Color","person":"Andy Kill","agency":"MKTG","seg":"Mid","score":8.2,"field":"Improvement, in their words","text":"The feedback on results is pretty selective. Overall I think the results have hit the mark however I think we can improve on strategy comms and results around announcements and company updates to secure a bit more coverage in those instances. Happy to elaborate further."},{"year":2025,"company":"Regard","person":"Nate Wilson","agency":"MKTG","seg":"Mid","score":7.4,"field":"Why not seeing ROI","text":"mixed -- I think there's an ability to level up the talk track to pitch new opportunities. Regard needs to bring more resources to bear, but the expectation should be delivering high quality stories, exclusives, and lots of mentions."},{"year":2025,"company":"Regard","person":"Nate Wilson","agency":"MKTG","seg":"Mid","score":7.4,"field":"Why low on proactivity","text":"doing fine; weekly meetings feel like a \"what should we cover\" instead of here are the big new things we want to discuss, the opps that are in-flight, and updates on in-progress work"},{"year":2025,"company":"Regard","person":"Nate Wilson","agency":"MKTG","seg":"Mid","score":7.4,"field":"Anything else to share","text":"lovely & engaged team, but everything comes down to impact and ability to land crucial stories, coach us on gaps, and help build a large megaphone for Regard"},{"year":2025,"company":"Machinify","person":"Kristin Woodworth","agency":"MKTG","seg":"Low","score":6.4,"field":"Why the low overall rating","text":"We started 2025 strong with a team that brought energy, ideas, and polish to the table, driving towards goals and bringing fresh ideas. The quality of organization, communication, preparation, and follow-through for meetings with the team and our leaders dropped off pretty significantly with the change in 120/80 team members in February. This was felt at all levels at Machinify (from the marketing team to the ELT). \n\nIt's better than it was in late Q1/early Q2 but it's still not where it was with Emily and Nicole. I know Sarah is trying to level up the team, and Jen has been great at bringing leadership to calls that have our leadership team on it. We all feel much more confident when Jen is on a call with any of our senior leaders (i.e., David, Prasanna, Joe, Asha). And that may not be sustainable."},{"year":2025,"company":"Machinify","person":"Kristin Woodworth","agency":"MKTG","seg":"Low","score":6.4,"field":"Why not seeing ROI","text":"I would say not yet. I'm hopeful that we can turn this around in Q3 and Q4. We just didn't get much of anything in Q2."},{"year":2025,"company":"Machinify","person":"Kristin Woodworth","agency":"MKTG","seg":"Low","score":6.4,"field":"Why low on tools & processes","text":"The preparation for meetings and the follow-up could be much better. Sometimes it feels really loose and a bit lazy."},{"year":2025,"company":"Machinify","person":"Kristin Woodworth","agency":"MKTG","seg":"Low","score":6.4,"field":"Anything else to share","text":"I love working with Jen and am hopeful that we can find our groove in Q3 so that we have more confidence going into the end of the year and 2026."},{"year":2025,"company":"Machinify","person":"Kristin Woodworth","agency":"MKTG","seg":"Low","score":6.4,"field":"Strength, in their words","text":"willingness to work with us and have challenging conversations"},{"year":2025,"company":"Synergie","person":"Sue Sommer","agency":"AOX3","seg":"Mid","score":8.6,"field":"Why not seeing ROI","text":"To be clear, it is not because of anything except Synergie and its Board desiring to not proactively communicate. I don't know that the investment we are making is worthwhile if this strategy continues. I want the guidance but its hard to justify the spend."},{"year":2025,"company":"Synergie","person":"Sue Sommer","agency":"AOX3","seg":"Mid","score":8.6,"field":"Why low on understanding our business","text":"noted in above comment, writing reflects that comprehension between our medical and pharmacy services and what Synergie intends to be is not clearly understood."},{"year":2025,"company":"Synergie","person":"Sue Sommer","agency":"AOX3","seg":"Mid","score":8.6,"field":"Anything else to share","text":"Team is very attentive and responsive and that is quite valuable."},{"year":2025,"company":"Synergie","person":"Sue Sommer","agency":"AOX3","seg":"Mid","score":8.6,"field":"Strength, in their words","text":"staying ahead of what needs to be accomplished"},{"year":2025,"company":"Synergie","person":"Sue Sommer","agency":"AOX3","seg":"Mid","score":8.6,"field":"Improvement, in their words","text":"writing quality is not the issue per se its that we have a very complex product and service offering and the writing suggests that team members still don't grasp how it will work."},{"year":2025,"company":"Cityblock Health","person":"Susan Brown","agency":"MKTG","seg":"High","score":9.2,"field":"Why low on tools & processes","text":"It's not a negative bc we don't see a need for a more tech-heavy process, but we work together more organically / manually."},{"year":2025,"company":"Cityblock Health","person":"Susan Brown","agency":"MKTG","seg":"High","score":9.2,"field":"Anything else to share","text":"An absolute pleasure to work with 120/80.  The team feels like an extension of our own, and can trust them to care as deeply as we do about the work and the outcomes.  Never just reactive - always thinking ahead strategically and identifying the next opportunity."},{"year":2025,"company":"Innovaccer","person":"Arushi Awasthi","agency":"MKTG","seg":"Mid","score":8.2,"field":"Anything else to share","text":"We've had a solid partnership, and I truly appreciate the thoughtfulness and dedication the team brings to the table. Emily, in particular, stands out as a strong account lead. Her communication is sharp, proactive, and she has developed a deep understanding of Innovaccer. When she\u2019s away, there can be a noticeable dip in momentum, which is something we should work toward addressing with stronger bench strength or smoother transitions.\nGoing forward, I\u2019d love for us to place more emphasis on the strategy behind securing the right placements, timely, and aligning with our launches.\nThat said, some of the recent efforts have truly landed well. The Gravity profile was a standout, and I want to especially call out the CHAI and HLTH speaking opportunities, they were great wins.\nAll in all, the foundation is strong, and with a bit more focus on precision and pace, I\u2019m confident we can keep building great things together."},{"year":2026,"company":"Capital Rx / Judi Health","person":"Kristin Begley","agency":"MKTG","seg":"High","score":9.6,"field":"Why low on understanding our business","text":"I say 8 above only b/c its a complex business to understand/be a SME."},{"year":2026,"company":"Capital Rx / Judi Health","person":"Kristin Begley","agency":"MKTG","seg":"High","score":9.6,"field":"Anything else to share","text":"We very much appreciate the partnership. Any company in the growth phase of C and above has MANY needs, 120/80 is very attuned to helping while understanding nuances."},{"year":2026,"company":"Capital Rx / Judi Health","person":"Kristin Begley","agency":"MKTG","seg":"High","score":9.6,"field":"Improvement, in their words","text":"N/A - I think 120/80 is doing exactly what is scoped with us and outlasted any other PR firm. We likely need much more branding help recco's"},{"year":2026,"company":"Rainfall Health","person":"Ahmed 'Eddie' Qureshi","agency":"AOX3","seg":"High","score":9.4,"field":"Anything else to share","text":"Coming up with a shared list of resources and KPIs and measuring execution against them. And also having a scalable way to track shared information."},{"year":2026,"company":"Athenahealth","person":"Stacy Simpson","agency":"AOX3","seg":"Mid","score":8.2,"field":"Anything else to share","text":"I think we have a good team of smart people and I appreciate the consistent, steady support we get. I would love to see us turn some of our big ideas into execution to drive outsized coverage results."},{"year":2026,"company":"Artisight","person":"Andrew Still-Baxter","agency":"AOX3","seg":"Mid","score":8.8,"field":"Anything else to share","text":"It's a fantastic team and I'm incredibly grateful for the work they do. I've worked with a number of agencies over the past 15 years, and aox3 is by far the best."},{"year":2026,"company":"Withings","person":"Ally Lloyd","agency":"AOX3","seg":"High","score":9.6,"field":"Anything else to share","text":"We've had an incredible experience working together this year so far! Everyone has been wonderful to work with, but Nicole deserves a special shoutout. She has become a genuine extension of our Withings Health Solutions team. Her responsiveness and communication are consistently exceptional and we never feel out of the loop, and she always makes us feel like a top priority.\n\nThe coverage we've secured together has been impressive, and we're particularly proud of the results around the MedStar release and Access Acceptance, both felt like real wins that reflected a deep understanding of our brand and the stories that matter in this space.\n\nWe also want to recognize how thoughtfully the team manages their time across both our B2B and B2C businesses. Splitting focus between two very different audiences and narratives is no small feat, and they do it seamlessly. That kind of flexibility and dedication means a great deal to us.\n\nIf there's one area we'd love to see evolve, it's building in more consistent quarterly share-of-voice analyses and clearer roadmaps for the stories we want to tell later in the year. Having that proactive pipeline visibility would help us plan more strategically on our end.\n\nOverall, we are genuinely grateful for this partnership. The team's hard work, creativity, and commitment to our success across both sides of our business doesn't go unnoticed."},{"year":2026,"company":"Machinify","person":"Gabrielle Bovard","agency":"MKTG","seg":"Mid","score":7.4,"field":"Why the low overall rating","text":"We aren't seeing much in the way of successful outputs this year (i.e., awards won, bylines published, PR comms strategy moving the needle, etc.)"},{"year":2026,"company":"Machinify","person":"Gabrielle Bovard","agency":"MKTG","seg":"Mid","score":7.4,"field":"Why not seeing ROI","text":"I expect more strategy + independent execution from a team at this investment level. We're finding that we have to put in a lot of our own effort to mobilize the team."},{"year":2026,"company":"Machinify","person":"Gabrielle Bovard","agency":"MKTG","seg":"Mid","score":7.4,"field":"Anything else to share","text":"It would be helpful if the team acted a bit more independently against the goals we agree to at the top of each year."},{"year":2026,"company":"Infinitus","person":"Sarah Baicker","agency":"AOX3","seg":"Low","score":6.0,"field":"Why the low overall rating","text":"We've struggled to differentiate our story, and come up with ideas for getting attention. We've also struggled to be included in awards. We recognize we're in a challenging spot because we don't have customers who can speak publicly, but we've hoped the team would be able to guide us creatively to come up with ways to tell our story. We've also now had our team turn over, and I think that's negatively affecting all of the above as well -- I've had to personally re-do work (e.g, the Studio press release) and despite multiple calls with SMEs, the team struggled to understand our latest product launch."},{"year":2026,"company":"Infinitus","person":"Sarah Baicker","agency":"AOX3","seg":"Low","score":6.0,"field":"Why not seeing ROI","text":"I think my answer above answers this one as well -- we want to rely on this team to guide us through storytelling in this industry, and to be creative problem solvers. It feels like we would need to have multiple customers willing to talk publicly in order to get the full value of the investment."},{"year":2026,"company":"Infinitus","person":"Sarah Baicker","agency":"AOX3","seg":"Low","score":6.0,"field":"Why low on proactivity","text":"At this point, most of the strategy is coming from our team."},{"year":2026,"company":"Infinitus","person":"Sarah Baicker","agency":"AOX3","seg":"Low","score":6.0,"field":"Why low on understanding our business","text":"Alluded to this answer above; we're in a complex niche, but it was especially clear during the creation of our last two press releases that the team struggles some to understand our business."},{"year":2026,"company":"Infinitus","person":"Sarah Baicker","agency":"AOX3","seg":"Low","score":6.0,"field":"Anything else to share","text":"If there is anything we can be doing better to help us get the most of our investment, we are 100% on board to do it."},{"year":2026,"company":"CHAI","person":"Lucy Orr-Ewing","agency":"AOX3","seg":"High","score":10.0,"field":"Anything else to share","text":"You guys are extraordinary partners. Working on weekends for crisis calls, never-ending supply of top talent, and really go above and beyond to provide connections, speaking opps, media requests etc. \n\nWe couldn't have got through this time without you so thank you for all that you do!"},{"year":2026,"company":"CHAI","person":"Lucy Orr-Ewing","agency":"AOX3","seg":"High","score":10.0,"field":"Improvement, in their words","text":"Only in that I think our LinkedIn posts have become a bit generic and our engagement is much lower. Feels like the soul has slightly died."},{"year":2026,"company":"Parker Institute (PICI)","person":"Bob Purcell","agency":"AOX3","seg":"High","score":9.6,"field":"Anything else to share","text":"The team has done a great job getting me up to speed, navigating an organization going through tremendous amounts of change and keeping focused on delivering for us, especially with regard to media relations and PICI network communications through the newsletter they manage.  120/80 has been invaluable as we up-level and strengthen communications at PICI."},{"year":2026,"company":"Rad AI","person":"Demetri Giannikopoulos","agency":"MKTG","seg":"High","score":10.0,"field":"Improvement, in their words","text":"I\u2019m very happy"},{"year":2026,"company":"Rad AI","person":"Heather Cmiel","agency":"MKTG","seg":"Mid","score":8.0,"field":"Why low on proactivity","text":"I wanted to share commentary here - the team is amazing but I think at times there is a lot of focus on what is needed to deliver vs. managing in a real state while we strive to deliver on the checklist."},{"year":2026,"company":"Rad AI","person":"Heather Cmiel","agency":"MKTG","seg":"Mid","score":8.0,"field":"Why low on understanding our business","text":"I think it is strong on the PR side, not as much on the ad side."},{"year":2026,"company":"Rad AI","person":"Heather Cmiel","agency":"MKTG","seg":"Mid","score":8.0,"field":"Why low on tools & processes","text":"we have gotten better - it was super bumpy at on point."},{"year":2026,"company":"Rad AI","person":"Heather Cmiel","agency":"MKTG","seg":"Mid","score":8.0,"field":"Anything else to share","text":"The team is amazing. I would really be lost without them supporting our business. I need their continued support to show how this investment continues to impact the organization."},{"year":2026,"company":"Capital Rx / Judi Health","person":"Jackie McCarthy","agency":"MKTG","seg":"High","score":10.0,"field":"Anything else to share","text":"I really appreciate our partnership and the ability to come to your team for opinions and gut checks. Thank you for all that you do."},{"year":2026,"company":"Capital Rx / Judi Health","person":"Jackie McCarthy","agency":"MKTG","seg":"High","score":10.0,"field":"Strength, in their words","text":"Being flexible!"},{"year":2026,"company":"Optura","person":"Grace Wahle","agency":"AOX3","seg":"Low","score":6.6,"field":"Why the low overall rating","text":"Lots of back and forth on scope management and clarity of deliverables - need strong program management system/strategy if possible"},{"year":2026,"company":"Optura","person":"Grace Wahle","agency":"AOX3","seg":"Low","score":6.6,"field":"Why not seeing ROI","text":"I'd say we are getting return but need to work on getting more. Now that we have some internal role clarity, I am hopeful that will help"},{"year":2026,"company":"Optura","person":"Grace Wahle","agency":"AOX3","seg":"Low","score":6.6,"field":"Why low on proactivity","text":"I think they have been great with new opportunities but need to share more clarity on the goal behind opportunities so it's more strategic"},{"year":2026,"company":"Optura","person":"Grace Wahle","agency":"AOX3","seg":"Low","score":6.6,"field":"Why low on tools & processes","text":"I don't think the google doc commenting has been working effectively as a few things have been missed when working in this setting"},{"year":2026,"company":"CodaMetrix","person":"Carly Rose","agency":"MKTG","seg":"Mid","score":8.6,"field":"Why low on proactivity","text":"I think there's room for improvement. Kara Spak has been fantastic. I'd like to turn it up 5x with what she delivers to us in opportunities."},{"year":2026,"company":"CodaMetrix","person":"Carly Rose","agency":"MKTG","seg":"Mid","score":8.6,"field":"Why low on understanding our business","text":"I think the team has come a long way this year and with the recent uptick in payer v. provider reporting they've done."},{"year":2026,"company":"CodaMetrix","person":"Carly Rose","agency":"MKTG","seg":"Mid","score":8.6,"field":"Why low on tools & processes","text":"Yes, but more AEO insights would be meaningful"},{"year":2026,"company":"CodaMetrix","person":"Carly Rose","agency":"MKTG","seg":"Mid","score":8.6,"field":"Improvement, in their words","text":"More pitching and placement. In year one CodaMetrix had more ad hoc opportunities / panels / placements than we've had in year 2."},{"year":2026,"company":"Cityblock Health","person":"Susan Brown","agency":"MKTG","seg":"High","score":10.0,"field":"Improvement, in their words","text":"Since it's required I picked \"other\" but we are very happy with all services"},{"year":2026,"company":"LeanTaaS","person":"Kayla McMenamin","agency":"AOX3","seg":"Mid","score":7.8,"field":"Why the low overall rating","text":"Would like to see first drafts of content (award apps, speaking apps, talking point docs, pitches) with fewer errors and closer to customer ready. This has improved over time, but I'm still receiving first drafts with errors."},{"year":2026,"company":"LeanTaaS","person":"Kayla McMenamin","agency":"AOX3","seg":"Mid","score":7.8,"field":"Why low on understanding our business","text":"Our business is tough to get a handle on with our distinct service lines, but would like to see improvement here, especially in first drafts of content. Would like to lock in on a few source of truth documents for our overall narrative and our individual products and build copy/messaging from there. It feels like, currently, we're pulling from too many places and it impacts the consistency of our narrative."},{"year":2026,"company":"LeanTaaS","person":"Kayla McMenamin","agency":"AOX3","seg":"Mid","score":7.8,"field":"Why low on tools & processes","text":"(Sorry, I know I didn't rate this low, but still want to provide feedback) There has been improvement here, but would like AirTable to be consistently up to date and a one-stop-shop for any external Google Doc or initiative we're working on. I'm still Slack-diving for docs on occasion. Some links are in emails, others Slack, others Airtable. I would like to go to AirTable for everything."},{"year":2026,"company":"LeanTaaS","person":"Kayla McMenamin","agency":"AOX3","seg":"Mid","score":7.8,"field":"Anything else to share","text":"I've really enjoyed getting to know the AOx3 team and feel like we're getting into a good rhythm with our media outreach / securing stories for our SMEs and customers. Hoping to continue building on that foundation and start dreaming bigger about what a Tier 1 story could look like and what we would need on our end to secure it. I've appreciated the team's openness to feedback, as well, and their quickness of making changes that we suggest to our processes/organization."},{"year":2026,"company":"Lantern","person":"Nancy Ryerson","agency":"AOX3","seg":"Low","score":5.4,"field":"Why the low overall rating","text":"I think we're off to a strong start but are still building together towards \"outstanding.\" There's a lot going well and I feel like we're headed in the right direction, but I am also aligned with the feedback Shelly shared with Paula, especially regarding opportunistic coverage outside of announcements."},{"year":2026,"company":"Lantern","person":"Nancy Ryerson","agency":"AOX3","seg":"Low","score":5.4,"field":"Why not seeing ROI","text":"I would choose \"maybe\" if it was an option. 120/80 Group is a significant investment and I'm not sure we have consistently gotten an ROI for each month of our investment. But we have certainly have had strong months, especially around our announcements."},{"year":2026,"company":"Lantern","person":"Nancy Ryerson","agency":"AOX3","seg":"Low","score":5.4,"field":"Why low on proactivity","text":"I would love to see more new opportunities and ideas surfaced. Our activity has been driven largely by Lantern suggestions."},{"year":2026,"company":"Lantern","person":"Nancy Ryerson","agency":"AOX3","seg":"Low","score":5.4,"field":"Why low on understanding our business","text":"I think spending more time with our leadership will help deepen your understanding of our business. Sometimes writing for our leaders feels surface level rather than reflecting a deep understanding of our business."},{"year":2026,"company":"Lantern","person":"Nancy Ryerson","agency":"AOX3","seg":"Low","score":5.4,"field":"Why low on tools & processes","text":"I know that our Sharepoint vs. Google Drive divide makes this challenging, but let's continue to explore ways to improve our communication workflows. We're also interested in seeing more in-depth and timely analytics."},{"year":2026,"company":"Lantern","person":"Nancy Ryerson","agency":"AOX3","seg":"Low","score":5.4,"field":"Anything else to share","text":"Overall I really enjoy working with the team and always appreciate your organization and responsiveness, especially around announcements. I'm excited to see what we can do to more opportunistically take advantage of the conversations going on the news around affordability and Lantern's impact on costs and lives."},{"year":2026,"company":"Withings","person":"Nancy Tran","agency":"AOX3","seg":"Mid","score":7.8,"field":"Anything else to share","text":"Overall, 120/80 is a dependable partner with strong account management fundamentals. The primary opportunity for growth is on the proactive side, ie bringing bigger ideas to the table and pushing harder on results. We'd like to see a stronger track record of coverage wins which Katie has been sharing!\n\nWe'd also encourage 120/80 to more actively challenge Withings on US market strategy. As a company, we've historically leaned on EU direction for PR, and we rely on 120/80's expertise to flag when that approach doesn't translate for an American audience. Don't be afraid to push back. That perspective is exactly what we need from a US agency partner."},{"year":2026,"company":"Aegis Ventures","person":"Glenn Farrell","agency":"MKTG","seg":"Mid","score":8.6,"field":"Anything else to share","text":"I appreciate how the 120/80 team has been flexible and adapted to the new SOW and new metrics of success that we established in April.  Every member of the team that I work with on a daily basis is doing well, and it feels to me like 120/80 is an extension of the Aegis team."},{"year":2026,"company":"Aegis Ventures","person":"Glenn Farrell","agency":"MKTG","seg":"Mid","score":8.6,"field":"Improvement, in their words","text":"I'd like for Rob to be in contact with me more frequently. Perhaps we could set up a recurring 1:1 every 6 weeks"},{"year":2026,"company":"athenahealth (epocrates)","person":"Karen Philip","agency":"AOX3","seg":"Low","score":5.8,"field":"Why the low overall rating","text":"The actual work has been helpful and good. But I continue to feel like we are pulling work out of you, rather than having you driving us to strategy and impact. I see all the work on the athenahealth side of the work, and the balance is definitely not there for our 40% of total cost."},{"year":2026,"company":"athenahealth (epocrates)","person":"Karen Philip","agency":"AOX3","seg":"Low","score":5.8,"field":"Why not seeing ROI","text":"I just don't feel like we are getting the same proactive coverage and ideation that have been accustomed to previously."},{"year":2026,"company":"athenahealth (epocrates)","person":"Karen Philip","agency":"AOX3","seg":"Low","score":5.8,"field":"Why low on proactivity","text":"Same as above. I just don't really get proactive opportunities and ideas pitched to me."},{"year":2026,"company":"athenahealth (epocrates)","person":"Karen Philip","agency":"AOX3","seg":"Low","score":5.8,"field":"Strength, in their words","text":"Alyssa & Jon have been bright spots."},{"year":2026,"company":"Papa","person":"Jill Meadows","agency":"MKTG","seg":"High","score":9.6,"field":"Anything else to share","text":"The Papa account team is really strong. I have wonderful things to say about each and every person on the team. And I very much appreciate the firm's willingness and ability to flex to our needs and resources. You've been excellent partners.\n\nTo share more on the areas of improvement I marked off above:\n- Analytics support \u2013\u00a0Simran's detailed weekly updates on active LinkedIn campaigns are excellent; nothing is lacking there. I'm thinking more broadly of how those campaigns and other work connects back to broader marketing & business goals, and working together to shape those. I see it as an area we can continue growing together.\n- Driving results \u2013 Similar to the above. I'd love to work together to think more strategically about how we move leads down the funnel to drive business results. We already executed our planning session and have work in progress to do this for our 2028 sales season, so we're on our way!"},{"year":2026,"company":"Cityblock Health","person":"Angel Henderson","agency":"MKTG","seg":"High","score":10.0,"field":"Anything else to share","text":"Great work! Our 120/80 folx are crucial to our success and always helpful in tough situations."},{"year":2026,"company":"Cityblock Health","person":"Angel Henderson","agency":"MKTG","seg":"High","score":10.0,"field":"Improvement, in their words","text":"Nothing they integrate themselves fully into the team"}],"records":[{"year":2025,"company":"Blue Shield of California","person":"jonna m constantine","agency":"AOX3","seg":"Mid","composite":8.6,"overall":8.0,"proactive":9.0,"understanding":9.0,"tools":8.0,"recommend":9.0,"roi":"Yes","well":["Client Service","Communication","Measurement & ROI","Results","Strategy"],"better":["Communication","Writing Quality"]},{"year":2025,"company":"COTA","person":"Jaimee Ryan","agency":"AOX3","seg":"Mid","composite":8.6,"overall":8.0,"proactive":9.0,"understanding":8.0,"tools":8.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Communication","Results","Timeliness","Writing Quality"],"better":["Measurement & ROI","Other"]},{"year":2025,"company":"Capital Rx / Judi Health","person":"Michael Passanante","agency":"MKTG","seg":"Mid","composite":8.2,"overall":8.0,"proactive":8.0,"understanding":8.0,"tools":9.0,"recommend":8.0,"roi":"Yes","well":["Client Service","Communication","Results","Strategy","Timeliness"],"better":["Measurement & ROI"]},{"year":2025,"company":"Papa","person":"Jill Meadows","agency":"MKTG","seg":"Mid","composite":8.8,"overall":9.0,"proactive":5.0,"understanding":10.0,"tools":10.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Measurement & ROI","Writing Quality"],"better":["Timeliness"]},{"year":2025,"company":"Omada Health","person":"Rose Ramseth","agency":"MKTG","seg":"High","composite":9.4,"overall":10.0,"proactive":8.0,"understanding":10.0,"tools":9.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Communication","Measurement & ROI","Results","Strategy","Timeliness","Writing Quality"],"better":["Writing Quality"]},{"year":2025,"company":"Abridge","person":"Libby","agency":"AOX3","seg":"High","composite":9.8,"overall":10.0,"proactive":9.0,"understanding":10.0,"tools":10.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Communication","Results","Strategy","Timeliness"],"better":["Measurement & ROI"]},{"year":2025,"company":"Cityblock Health","person":"Jennifer Davis","agency":"MKTG","seg":"High","composite":9.0,"overall":9.0,"proactive":9.0,"understanding":9.0,"tools":8.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Communication","Results","Strategy","Writing Quality"],"better":["Timeliness"]},{"year":2025,"company":"Cedar","person":"Stella Sanchez","agency":"AOX3","seg":"Mid","composite":8.8,"overall":8.0,"proactive":10.0,"understanding":8.0,"tools":9.0,"recommend":9.0,"roi":"Yes","well":["Client Service","Communication","Measurement & ROI","Results","Strategy"],"better":["Writing Quality"]},{"year":2025,"company":"Athenahealth","person":"Adam Brickman","agency":"AOX3","seg":"Mid","composite":7.2,"overall":8.0,"proactive":7.0,"understanding":6.0,"tools":6.0,"recommend":9.0,"roi":"Yes","well":["Client Service","Communication","Timeliness"],"better":["Strategy"]},{"year":2025,"company":"Cedar","person":"Brandon Minow","agency":"AOX3","seg":"Mid","composite":8.6,"overall":8.0,"proactive":10.0,"understanding":7.0,"tools":9.0,"recommend":9.0,"roi":"Yes","well":["Client Service","Communication","Measurement & ROI","Results","Timeliness"],"better":["Strategy","Writing Quality"]},{"year":2025,"company":"Infinitus","person":"Sarah Baicker","agency":"AOX3","seg":"Mid","composite":7.8,"overall":7.0,"proactive":7.0,"understanding":8.0,"tools":10.0,"recommend":7.0,"roi":"Yes","well":["Communication","Results","Writing Quality"],"better":["Strategy"]},{"year":2025,"company":"Datavant","person":"Lynn Shepherd","agency":"MKTG","seg":"Low","composite":6.4,"overall":8.0,"proactive":4.0,"understanding":8.0,"tools":3.0,"recommend":9.0,"roi":"Yes","well":["Other"],"better":["Measurement & ROI","Strategy","Timeliness"]},{"year":2025,"company":"CareRev","person":"Sara Schroeder","agency":"MKTG","seg":"High","composite":9.8,"overall":9.0,"proactive":10.0,"understanding":10.0,"tools":10.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Communication","Measurement & ROI","Results","Strategy","Timeliness","Writing Quality"],"better":[]},{"year":2025,"company":"Infinitus","person":"Ankit Jain","agency":"AOX3","seg":"Low","composite":6.8,"overall":6.0,"proactive":6.0,"understanding":8.0,"tools":7.0,"recommend":7.0,"roi":"No","well":["Client Service","Communication"],"better":["Measurement & ROI","Results","Strategy"]},{"year":2025,"company":"Personify Health","person":"Erica Morgenstern","agency":"MKTG","seg":"High","composite":9.0,"overall":9.0,"proactive":8.0,"understanding":9.0,"tools":9.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Communication","Strategy"],"better":["Measurement & ROI","Results","Writing Quality"]},{"year":2025,"company":"Charlie Health","person":"Jeffrey Allen","agency":"MKTG","seg":"Low","composite":5.4,"overall":5.0,"proactive":4.0,"understanding":7.0,"tools":6.0,"recommend":5.0,"roi":"No","well":["Communication"],"better":["Results","Strategy","Writing Quality"]},{"year":2025,"company":"Athenahealth","person":"Stacy Simpson","agency":"AOX3","seg":"Mid","composite":7.4,"overall":8.0,"proactive":7.0,"understanding":9.0,"tools":6.0,"recommend":7.0,"roi":"Yes","well":["Client Service","Results","Strategy"],"better":["Communication","Measurement & ROI","Results","Timeliness"]},{"year":2025,"company":"CodaMetrix","person":"Robin Lloyd","agency":"MKTG","seg":"Mid","composite":8.8,"overall":9.0,"proactive":9.0,"understanding":9.0,"tools":8.0,"recommend":9.0,"roi":"Yes","well":["Client Service","Communication","Strategy","Timeliness","Writing Quality"],"better":["Measurement & ROI"]},{"year":2025,"company":"Personify Health","person":"Julie Sculley","agency":"MKTG","seg":"Mid","composite":8.4,"overall":8.0,"proactive":8.0,"understanding":8.0,"tools":8.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Communication","Results","Timeliness","Writing Quality"],"better":["Other","Results","Writing Quality"]},{"year":2025,"company":"CodaMetrix","person":"Carly Rose","agency":"MKTG","seg":"Mid","composite":8.2,"overall":8.0,"proactive":7.0,"understanding":8.0,"tools":10.0,"recommend":8.0,"roi":"Yes","well":["Client Service","Communication","Results","Strategy","Timeliness"],"better":["Measurement & ROI","Results","Writing Quality"]},{"year":2025,"company":"CHAI","person":"Lucy Orr-Ewing","agency":"AOX3","seg":"Mid","composite":8.4,"overall":9.0,"proactive":7.0,"understanding":8.0,"tools":9.0,"recommend":9.0,"roi":"Yes","well":["Client Service","Timeliness"],"better":["Strategy"]},{"year":2025,"company":"Blue Shield of California","person":"Matthew Yi","agency":"AOX3","seg":"High","composite":9.2,"overall":9.0,"proactive":9.0,"understanding":9.0,"tools":9.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Communication","Results","Strategy","Timeliness"],"better":["Other"]},{"year":2025,"company":"Aegis Ventures","person":"Glenn Farrell","agency":"MKTG","seg":"Mid","composite":8.0,"overall":8.0,"proactive":7.0,"understanding":8.0,"tools":8.0,"recommend":9.0,"roi":"Yes","well":["Client Service","Communication","Measurement & ROI","Results","Strategy","Timeliness"],"better":["Other"]},{"year":2025,"company":"Capital Rx / Judi Health","person":"Justin Venneri","agency":"MKTG","seg":"Mid","composite":8.4,"overall":8.0,"proactive":8.0,"understanding":8.0,"tools":9.0,"recommend":9.0,"roi":"Yes","well":["Client Service","Communication","Results","Strategy","Writing Quality"],"better":["Measurement & ROI","Timeliness"]},{"year":2025,"company":"Color","person":"Andy Kill","agency":"MKTG","seg":"Mid","composite":8.2,"overall":8.0,"proactive":7.0,"understanding":10.0,"tools":8.0,"recommend":8.0,"roi":"Yes","well":["Client Service","Communication","Measurement & ROI","Other","Results","Strategy","Timeliness","Writing Quality"],"better":["Other","Results"]},{"year":2025,"company":"Regard","person":"Nate Wilson","agency":"MKTG","seg":"Mid","composite":7.4,"overall":7.0,"proactive":7.0,"understanding":8.0,"tools":8.0,"recommend":7.0,"roi":"No, Yes","well":["Client Service","Communication","Strategy","Writing Quality"],"better":["Results"]},{"year":2025,"company":"Machinify","person":"Kristin Woodworth","agency":"MKTG","seg":"Low","composite":6.4,"overall":6.0,"proactive":7.0,"understanding":7.0,"tools":4.0,"recommend":8.0,"roi":"No","well":["Other","Strategy","Timeliness"],"better":["Client Service","Communication","Measurement & ROI","Results","Strategy","Timeliness","Writing Quality"]},{"year":2025,"company":"Synergie","person":"Sue Sommer","agency":"AOX3","seg":"Mid","composite":8.6,"overall":8.0,"proactive":10.0,"understanding":6.0,"tools":9.0,"recommend":10.0,"roi":"No","well":["Client Service","Communication","Other","Strategy","Timeliness"],"better":["Other","Strategy","Writing Quality"]},{"year":2025,"company":"Hume AI","person":"Lydia Schooler","agency":"AOX3","seg":"High","composite":9.2,"overall":8.0,"proactive":9.0,"understanding":9.0,"tools":10.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Communication","Results","Strategy","Timeliness"],"better":["Writing Quality"]},{"year":2025,"company":"Cityblock Health","person":"Susan Brown","agency":"MKTG","seg":"High","composite":9.2,"overall":9.0,"proactive":10.0,"understanding":10.0,"tools":7.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Communication","Results","Strategy","Timeliness"],"better":["Writing Quality"]},{"year":2025,"company":"Innovaccer","person":"Arushi Awasthi","agency":"MKTG","seg":"Mid","composite":8.2,"overall":8.0,"proactive":8.0,"understanding":9.0,"tools":8.0,"recommend":8.0,"roi":"Yes","well":["Client Service","Communication"],"better":["Results","Strategy"]},{"year":2026,"company":"Capital Rx / Judi Health","person":"Kristin Begley","agency":"MKTG","seg":"High","composite":9.6,"overall":10.0,"proactive":10.0,"understanding":8.0,"tools":10.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Measurement & ROI","Problem-Solving","Results","Strategy","Timeliness","Writing Quality"],"better":["Other"]},{"year":2026,"company":"CHAI","person":"Brian Anderson","agency":"AOX3","seg":"High","composite":9.0,"overall":9.0,"proactive":8.0,"understanding":9.0,"tools":9.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Measurement & ROI","Strategy","Timeliness","Writing Quality"],"better":["Measurement & ROI","Other"]},{"year":2026,"company":"Rainfall Health","person":"Ahmed 'Eddie' Qureshi","agency":"AOX3","seg":"High","composite":9.4,"overall":9.0,"proactive":8.0,"understanding":10.0,"tools":10.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Problem-Solving","Strategy","Timeliness"],"better":["Measurement & ROI","Results"]},{"year":2026,"company":"Astrin Biosciences","person":"Jaime LaMontagne","agency":"MKTG","seg":"High","composite":9.4,"overall":10.0,"proactive":9.0,"understanding":10.0,"tools":8.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Strategy","Timeliness","Writing Quality"],"better":["Measurement & ROI"]},{"year":2026,"company":"Athenahealth","person":"Stacy Simpson","agency":"AOX3","seg":"Mid","composite":8.2,"overall":8.0,"proactive":8.0,"understanding":9.0,"tools":7.0,"recommend":9.0,"roi":"Yes","well":["Client Service","Problem-Solving","Results"],"better":["Strategy","Timeliness"]},{"year":2026,"company":"Artisight","person":"Andrew Still-Baxter","agency":"AOX3","seg":"Mid","composite":8.8,"overall":9.0,"proactive":8.0,"understanding":8.0,"tools":9.0,"recommend":10.0,"roi":"Yes","well":["Results","Strategy"],"better":["Measurement & ROI"]},{"year":2026,"company":"Withings","person":"Ally Lloyd","agency":"AOX3","seg":"High","composite":9.6,"overall":9.0,"proactive":9.0,"understanding":10.0,"tools":10.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Problem-Solving","Results","Strategy"],"better":["Measurement & ROI"]},{"year":2026,"company":"Pittsburgh Life Sciences Alliance","person":"Austin Price","agency":"AOX3","seg":"Mid","composite":7.6,"overall":7.0,"proactive":7.0,"understanding":7.0,"tools":8.0,"recommend":9.0,"roi":"Yes","well":["Client Service","Results","Timeliness"],"better":["Measurement & ROI","Strategy"]},{"year":2026,"company":"Machinify","person":"Gabrielle Bovard","agency":"MKTG","seg":"Mid","composite":7.4,"overall":6.0,"proactive":7.0,"understanding":9.0,"tools":8.0,"recommend":7.0,"roi":"No","well":["Client Service","Problem-Solving","Timeliness","Writing Quality"],"better":["Measurement & ROI","Results","Strategy"]},{"year":2026,"company":"Infinitus","person":"Sarah Baicker","agency":"AOX3","seg":"Low","composite":6.0,"overall":6.0,"proactive":5.0,"understanding":6.0,"tools":8.0,"recommend":5.0,"roi":"No","well":["Client Service","Results"],"better":["Problem-Solving","Strategy"]},{"year":2026,"company":"CHAI","person":"Lucy Orr-Ewing","agency":"AOX3","seg":"High","composite":10.0,"overall":10.0,"proactive":10.0,"understanding":10.0,"tools":10.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Strategy"],"better":["Other","Writing Quality"]},{"year":2026,"company":"Parker Institute (PICI)","person":"Bob Purcell","agency":"AOX3","seg":"High","composite":9.6,"overall":9.0,"proactive":10.0,"understanding":9.0,"tools":10.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Measurement & ROI","Problem-Solving","Results","Strategy"],"better":["Timeliness","Writing Quality"]},{"year":2026,"company":"Twin Health","person":"Sheena Alli","agency":"AOX3","seg":"Mid","composite":8.6,"overall":8.0,"proactive":8.0,"understanding":9.0,"tools":8.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Measurement & ROI","Problem-Solving","Strategy","Timeliness"],"better":["Results"]},{"year":2026,"company":"Rad AI","person":"Demetri Giannikopoulos","agency":"MKTG","seg":"High","composite":10.0,"overall":10.0,"proactive":10.0,"understanding":10.0,"tools":10.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Measurement & ROI","Problem-Solving","Results","Strategy"],"better":["Other"]},{"year":2026,"company":"Rad AI","person":"Heather Cmiel","agency":"MKTG","seg":"Mid","composite":8.0,"overall":9.0,"proactive":7.0,"understanding":8.0,"tools":7.0,"recommend":9.0,"roi":"Yes","well":["Client Service","Measurement & ROI","Results","Timeliness"],"better":["Problem-Solving","Strategy"]},{"year":2026,"company":"Capital Rx / Judi Health","person":"Jackie McCarthy","agency":"MKTG","seg":"High","composite":10.0,"overall":10.0,"proactive":10.0,"understanding":10.0,"tools":10.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Measurement & ROI","Other","Problem-Solving","Results","Strategy","Timeliness","Writing Quality"],"better":["Results"]},{"year":2026,"company":"Optura","person":"Grace Wahle","agency":"AOX3","seg":"Low","composite":6.6,"overall":6.0,"proactive":7.0,"understanding":8.0,"tools":6.0,"recommend":6.0,"roi":"Yes","well":["Client Service","Problem-Solving","Timeliness"],"better":["Results","Strategy","Writing Quality"]},{"year":2026,"company":"CodaMetrix","person":"Carly Rose","agency":"MKTG","seg":"Mid","composite":8.6,"overall":8.0,"proactive":7.0,"understanding":9.0,"tools":9.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Measurement & ROI","Problem-Solving","Strategy","Timeliness","Writing Quality"],"better":["Other","Results"]},{"year":2026,"company":"Cityblock Health","person":"Susan Brown","agency":"MKTG","seg":"High","composite":10.0,"overall":10.0,"proactive":10.0,"understanding":10.0,"tools":10.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Measurement & ROI","Problem-Solving","Results","Strategy","Timeliness","Writing Quality"],"better":["Other"]},{"year":2026,"company":"LeanTaaS","person":"Kayla McMenamin","agency":"AOX3","seg":"Mid","composite":7.8,"overall":8.0,"proactive":8.0,"understanding":7.0,"tools":8.0,"recommend":8.0,"roi":"Yes","well":["Client Service","Measurement & ROI","Problem-Solving","Results","Timeliness"],"better":["Writing Quality"]},{"year":2026,"company":"Datavant","person":"Lynn Shepherd","agency":"MKTG","seg":"Mid","composite":7.8,"overall":8.0,"proactive":7.0,"understanding":8.0,"tools":7.0,"recommend":9.0,"roi":"Yes","well":["Client Service","Strategy","Timeliness"],"better":["Measurement & ROI","Problem-Solving","Results"]},{"year":2026,"company":"Lantern","person":"Nancy Ryerson","agency":"AOX3","seg":"Low","composite":5.4,"overall":6.0,"proactive":3.0,"understanding":6.0,"tools":5.0,"recommend":7.0,"roi":"Yes","well":["Client Service","Timeliness"],"better":["Measurement & ROI","Results","Strategy","Writing Quality"]},{"year":2026,"company":"Withings","person":"Nancy Tran","agency":"AOX3","seg":"Mid","composite":7.8,"overall":8.0,"proactive":7.0,"understanding":8.0,"tools":8.0,"recommend":8.0,"roi":"Yes","well":["Client Service","Timeliness"],"better":["Results","Strategy"]},{"year":2026,"company":"Aegis Ventures","person":"Glenn Farrell","agency":"MKTG","seg":"Mid","composite":8.6,"overall":8.0,"proactive":8.0,"understanding":10.0,"tools":8.0,"recommend":9.0,"roi":"Yes","well":["Client Service","Problem-Solving","Results","Strategy","Timeliness"],"better":["Other"]},{"year":2026,"company":"athenahealth (epocrates)","person":"Karen Philip","agency":"AOX3","seg":"Low","composite":5.8,"overall":6.0,"proactive":3.0,"understanding":7.0,"tools":7.0,"recommend":6.0,"roi":"No","well":["Other","Problem-Solving","Strategy"],"better":["Results"]},{"year":2026,"company":"Papa","person":"Jill Meadows","agency":"MKTG","seg":"High","composite":9.6,"overall":9.0,"proactive":9.0,"understanding":10.0,"tools":10.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Problem-Solving","Strategy","Timeliness","Writing Quality"],"better":["Measurement & ROI","Results"]},{"year":2026,"company":"Cityblock Health","person":"Angel Henderson","agency":"MKTG","seg":"High","composite":10.0,"overall":10.0,"proactive":10.0,"understanding":10.0,"tools":10.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Problem-Solving","Results","Strategy","Timeliness","Writing Quality"],"better":["Other"]},{"year":2026,"company":"Blue Shield of California","person":"Matthew Yi","agency":"AOX3","seg":"Mid","composite":8.8,"overall":8.0,"proactive":8.0,"understanding":9.0,"tools":9.0,"recommend":10.0,"roi":"Yes","well":["Client Service","Problem-Solving","Results","Strategy","Timeliness"],"better":["Writing Quality"]}]};
+</script>
+<script>
+(function(){
+'use strict';
+var S={year:'2026', agency:'All', qseg:'All'};
+var SC=DATA.scopes, CANON=DATA.canon, DIMS=DATA.dims;
+var DIMLAB={}; DIMS.forEach(function(d){DIMLAB[d[0]]=d[1];});
+var SHORT={proactive:'Proactivity',understanding:'Business understanding',tools:'Tools & processes',overall:'Overall performance'};
+var DRV=['proactive','understanding','tools'];
+var $=function(id){return document.getElementById(id);};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];});};
+var NS='http://www.w3.org/2000/svg';
+function el(t,a,p){var e=document.createElementNS(NS,t);for(var k in (a||{}))e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+function cur(){return SC[S.year+'|'+S.agency]||null;}
+function num(v,d){return v==null?'—':(d===0?String(Math.round(v)):v.toFixed(d==null?1:d));}
+function low(s){return String(s).charAt(0).toLowerCase()+String(s).slice(1);}
+
+/* ---------- tooltip ---------- */
+var tip=$('tip');
+function showTip(e,html){tip.innerHTML=html;tip.style.opacity=1;moveTip(e);}
+function moveTip(e){
+  var r=tip.getBoundingClientRect(), x=e.clientX+14, y=e.clientY+14;
+  if(x+r.width>innerWidth-10)x=e.clientX-r.width-14;
+  if(y+r.height>innerHeight-10)y=e.clientY-r.height-14;
+  tip.style.left=x+'px';tip.style.top=y+'px';
+}
+function hideTip(){tip.style.opacity=0;}
+function bindTip(node,html){
+  node.addEventListener('mouseenter',function(e){showTip(e,html);});
+  node.addEventListener('mousemove',moveTip);
+  node.addEventListener('mouseleave',hideTip);
+  node.setAttribute('tabindex','0');
+  node.addEventListener('focus',function(){
+    var b=node.getBoundingClientRect();
+    showTip({clientX:b.left+b.width/2,clientY:b.top},html);
+  });
+  node.addEventListener('blur',hideTip);
+}
+
+/* ---------- bar path ---------- */
+function barPath(x0,y,w,h,r,dir){
+  r=Math.min(r,Math.abs(w),h/2);
+  if(Math.abs(w)<0.7) return '';
+  if(dir>0){
+    var x1=x0+Math.abs(w);
+    if(Math.abs(w)<=r) return 'M'+x0+','+y+'H'+x1+'V'+(y+h)+'H'+x0+'Z';
+    return 'M'+x0+','+y+'H'+(x1-r)+'A'+r+','+r+' 0 0 1 '+x1+','+(y+r)+'V'+(y+h-r)+'A'+r+','+r+' 0 0 1 '+(x1-r)+','+(y+h)+'H'+x0+'Z';
+  }
+  var xa=x0-Math.abs(w);
+  if(Math.abs(w)<=r) return 'M'+x0+','+y+'H'+xa+'V'+(y+h)+'H'+x0+'Z';
+  return 'M'+x0+','+y+'H'+(xa+r)+'A'+r+','+r+' 0 0 0 '+xa+','+(y+r)+'V'+(y+h-r)+'A'+r+','+r+' 0 0 0 '+(xa+r)+','+(y+h)+'H'+x0+'Z';
+}
+
+/* ---------- grouped horizontal bars ---------- */
+function hbars(mount,o){
+  if(!mount)return;
+  mount.innerHTML='';
+  var cats=o.cats, ser=o.series, ns=ser.length;
+  var longest=cats.reduce(function(a,c){return Math.max(a,String(c).length);},0);
+  var labW=Math.max(o.labW||186, Math.ceil(longest*6.9)+20);
+  var padR=52, W=Math.max(labW+300,(mount.clientWidth||760));
+  var plotW=W-labW-padR;
+  var barH=Math.min(o.barH||18,22), gap=2, bandH=ns*barH+(ns-1)*gap+(o.bandPad||16);
+  var top=22, H=top+cats.length*bandH+26;
+  var min=o.min!=null?o.min:0, max=o.max;
+  var sx=function(v){return labW+(v-min)/(max-min)*plotW;};
+  var svg=el('svg',{viewBox:'0 0 '+W+' '+H,width:'100%',height:H,role:'img'},mount);
+  var zero=sx(o.diverging?0:min);
+  var fmt=o.fmt||function(x){return (Math.round(x*10)/10)+(o.unit||'');};
+  var ticks=o.ticks||[min,(min+max)/2,max];
+  ticks.forEach(function(t){
+    var x=sx(t);
+    el('line',{x1:x,y1:top-8,x2:x,y2:top+cats.length*bandH-4,class:'gl'},svg);
+    var tk=el('text',{x:x,y:H-8,class:'tick','text-anchor':'middle'},svg);
+    tk.textContent=(o.fmtTick||function(v){return (Math.round(v*10)/10)+(o.unit||'');})(t);
+  });
+  el('line',{x1:zero,y1:top-8,x2:zero,y2:top+cats.length*bandH-4,class:'ax'},svg);
+  cats.forEach(function(c,i){
+    var by=top+i*bandH, g=el('g',{class:'row'},svg);
+    var t=el('text',{x:labW-12,y:by+(ns*barH+(ns-1)*gap)/2+4,class:'catlab','text-anchor':'end'},g);
+    t.textContent=c;
+    ser.forEach(function(s,j){
+      var v=s.vals[i]; if(v==null) return;
+      var y=by+j*(barH+gap), w=sx(v)-zero, dir=w>=0?1:-1;
+      var p=barPath(zero,y,w,barH,4,dir);
+      if(p) el('path',{d:p,fill:s.color,class:'bar'},g);
+      var txt=fmt(v), tw=txt.length*6.6+4, lx, anch='start', inside=false;
+      if(dir>0){ lx=zero+Math.abs(w)+7; }
+      else{
+        lx=zero-Math.abs(w)-7; anch='end';
+        if(lx-tw<labW+2 && Math.abs(w)>tw+10){ lx=zero-Math.abs(w)+7; anch='start'; inside=true; }
+      }
+      var lb=el('text',{x:lx,y:y+barH-4,class:'vlab','text-anchor':anch},g);
+      if(inside) lb.setAttribute('fill','var(--surface-1)');
+      lb.textContent=txt;
+      var hit=el('rect',{x:0,y:y-1,width:W,height:barH+2,class:'hit'},g);
+      bindTip(hit,'<div class="tt">'+esc(c)+'</div>'+ser.map(function(s2){
+        return '<div class="tr"><span>'+esc(s2.name)+'</span><span>'+(s2.vals[i]==null?'—':fmt(s2.vals[i]))+'</span></div>';
+      }).join(''));
+    });
+  });
+}
+
+/* ---------- table ---------- */
+function tbl(mount,head,rows,align,hlRow){
+  if(!mount)return;
+  mount.innerHTML='<div class="scroll"><table><thead><tr>'+
+    head.map(function(h,i){return '<th'+((align&&align[i])?' class="num"':'')+'>'+esc(h)+'</th>';}).join('')+
+    '</tr></thead><tbody>'+
+    rows.map(function(r,ri){return '<tr'+(hlRow&&hlRow(ri)?' class="hl"':'')+'>'+
+      r.map(function(c,i){return '<td'+((align&&align[i])?' class="num"':'')+'>'+(c==null?'—':c)+'</td>';}).join('')+'</tr>';}).join('')+
+    '</tbody></table></div>';
+}
+
+/* ---------- filters ---------- */
+function segbtns(mount,opts,val,cb){
+  if(!mount)return;
+  mount.innerHTML='';
+  opts.forEach(function(o){
+    var b=document.createElement('button');
+    b.textContent=o.label; b.setAttribute('aria-pressed',String(o.v===val));
+    b.disabled=!!o.disabled; if(o.disabled)b.style.opacity=.35;
+    b.onclick=function(){cb(o.v);};
+    mount.appendChild(b);
+  });
+}
+function buildFilters(){
+  segbtns($('fyear'),[{v:'2025',label:'2025'},{v:'2026',label:'2026'}],S.year,function(v){
+    S.year=v; if(!SC[v+'|'+S.agency])S.agency='All'; render();});
+  var ags=[{v:'All',label:'All'},{v:'MKTG',label:'MKTG'},{v:'AOX3',label:'AOX3'}];
+  ags.forEach(function(a){a.disabled=!SC[S.year+'|'+a.v];});
+  segbtns($('fagency'),ags,S.agency,function(v){S.agency=v;render();});
+}
+
+/* ---------- tiles + hero ---------- */
+function renderTiles(){
+  var c=cur(), prev=(S.year==='2026')?SC['2025|'+S.agency]:null;
+  function delta(now,then,d){
+    if(now==null||then==null)return '<div class="dl">no prior-year match</div>';
+    var v=now-then, s=(v>0?'+':'')+(d===0?Math.round(v):v.toFixed(1));
+    return '<div class="dl"><b class="'+(v>0?'up':(v<0?'dn':''))+'">'+s+'</b> vs 2025</div>';
+  }
+  var t=[
+    {lab:'Responses',val:c.n,dl:'<div class="dl">from '+c.clients+' clients</div>'},
+    {lab:'Average score',val:num(c.avg,2),dl:delta(c.avg,prev&&prev.avg,1)},
+    {lab:'Net Promoter Score',val:c.nps,dl:delta(c.nps,prev&&prev.nps,0)},
+    {lab:'Would recommend',val:num(c.dims.recommend,1),dl:delta(c.dims.recommend,prev&&prev.dims.recommend,1)},
+    {lab:'Seeing good ROI',val:c.roi+'%',dl:delta(c.roi,prev&&prev.roi,0)}
+  ];
+  $('tiles').innerHTML=t.map(function(x){
+    return '<div class="tile"><div class="lab">'+x.lab+'</div><div class="val">'+x.val+'</div>'+x.dl+'</div>';
+  }).join('');
+
+  var L=c.lift['Strategy']||{}, h=$('hero');
+  if(L.well_lift!=null){
+    h.innerHTML='<div class="num">'+(L.well_lift>0?'+':'')+L.well_lift.toFixed(1)+'</div>'+
+      '<div class="txt"><h3 style="font-size:16px">Points of score attributable to strategy</h3>'+
+      '<p class="sub" style="margin:0">The '+L.nw+' clients who identified strategic thinking as a strength score '+
+      Math.abs(L.well_lift).toFixed(1)+' points higher on average than everyone else'+
+      (L.better_lift!=null?', and the '+L.nb+' who asked us to improve it score '+Math.abs(L.better_lift).toFixed(1)+' points lower':'')+
+      '. No other quality influences the score to this degree.</p></div>';
+  } else {
+    h.innerHTML='<div class="txt"><p class="sub" style="margin:0">Not enough responses in this selection to measure the strategy effect.</p></div>';
+  }
+  $('scopenote').innerHTML='Showing <b>'+c.n+'</b> responses — '+S.year+', '+(S.agency==='All'?'all agencies':S.agency);
+}
+
+/* ---------- tracking: rating band vs recommend score ---------- */
+var BAND=[['low','Rated it 1–6'],['mid','Rated it 7–8'],['high','Rated it 9–10']];
+function renderTrack(){
+  var c=cur(), tr=c.track;
+  var keys=DRV.filter(function(k){return tr[k];});
+  var rows=[], hl=[];
+  keys.forEach(function(k){
+    var r=tr[k];
+    rows.push([ '<b>'+esc(SHORT[k]||DIMLAB[k])+'</b>',
+      r.low.n?r.low.n:'0', r.low.rec==null?'—':r.low.rec.toFixed(1),
+      r.mid.n?r.mid.n:'0', r.mid.rec==null?'—':r.mid.rec.toFixed(1),
+      r.high.n?r.high.n:'0', r.high.rec==null?'—':r.high.rec.toFixed(1),
+      (r.low.rec!=null&&r.high.rec!=null)?('<b>'+(r.high.rec-r.low.rec>0?'+':'')+(r.high.rec-r.low.rec).toFixed(1)+'</b>'):'—' ]);
+  });
+  var spreads=keys.map(function(k){
+    var r=tr[k]; return (r.low.rec!=null&&r.high.rec!=null)?r.high.rec-r.low.rec:-99;});
+  var maxi=spreads.indexOf(Math.max.apply(null,spreads));
+  tbl($('t-track'),
+    ['Quality','Rated it 1–6','Their recommend score','Rated it 7–8','Their recommend score','Rated it 9–10','Their recommend score','Gap low to high'],
+    rows,[0,1,1,1,1,1,1,1],function(ri){return ri===maxi;});
+
+  /* chart: recommend score by band, one series per band */
+  var cats=keys.map(function(k){return SHORT[k]||DIMLAB[k];});
+  hbars($('c-track'),{cats:cats,barH:15,bandPad:18,labW:170,
+    series:BAND.map(function(b,i){
+      return {name:b[1],color:['var(--s2)','var(--s3)','var(--s1)'][i],
+        vals:keys.map(function(k){return tr[k][b[0]].rec;})};}),
+    min:0,max:10,ticks:[0,5,10],fmt:function(v){return v.toFixed(1);},fmtTick:function(v){return v;}});
+
+  var best=keys[maxi], r=tr[best];
+  $('k-track').innerHTML='<span class="tl">Key takeaway</span>'+
+    (r&&r.low.rec!=null&&r.high.rec!=null
+      ? 'The gap is widest on <b>'+low(SHORT[best]||DIMLAB[best])+'</b>. The '+r.low.n+
+        ' client'+(r.low.n===1?'':'s')+' who rated it 6 or below gave us an average of <b>'+r.low.rec.toFixed(1)+
+        '</b> on recommending us, while the '+r.high.n+' who rated it 9 or 10 gave <b>'+r.high.rec.toFixed(1)+
+        '</b>. That is a '+(r.high.rec-r.low.rec).toFixed(1)+
+        '-point difference in loyalty depending on one quality. Where a gap is narrow, that quality matters less to whether a client stays.'
+      : 'Not enough responses in this selection to compare the rating bands.');
+}
+
+/* ---------- correlation vs performance ---------- */
+function renderQuad(){
+  var c=cur();
+  var pts=DRV.map(function(k){return {k:k,name:SHORT[k]||DIMLAB[k],score:c.dims[k],r:c.corr[k]};})
+             .filter(function(p){return p.score!=null&&p.r!=null;});
+  if(pts.length<2){
+    $('t-quad').innerHTML='<p class="empty">Too few responses in this selection to measure correlation.</p>';
+    $('c-quad').innerHTML=''; $('k-quad').innerHTML=''; return;
+  }
+  pts.sort(function(a,b){return b.r-a.r;});
+  tbl($('t-quad'),['Quality','Correlation with recommend score (0 to 1)','Average rating out of 10'],
+    pts.map(function(p){return [esc(p.name),p.r.toFixed(2),p.score.toFixed(2)];}),[0,1,1],
+    function(ri){return ri===0;});
+  var mount=$('c-quad');
+  mount.innerHTML='<div class="two"><div><h4>How much it matters</h4>'+
+    '<p class="dim" style="margin:0 0 8px">Correlation with the recommend score, 0 to 1.</p><div id="c-drv-r"></div></div>'+
+    '<div><h4>How well we perform</h4>'+
+    '<p class="dim" style="margin:0 0 8px">Average rating out of 10.</p><div id="c-drv-s"></div></div></div>';
+  var cats=pts.map(function(p){return p.name;});
+  hbars($('c-drv-r'),{cats:cats,labW:150,barH:20,
+    series:[{name:'Correlation with recommend score',color:'var(--s1)',vals:pts.map(function(p){return p.r;})}],
+    min:0,max:1,ticks:[0,0.5,1],fmt:function(v){return v.toFixed(2);},fmtTick:function(v){return v.toFixed(1);}});
+  hbars($('c-drv-s'),{cats:cats,labW:150,barH:20,
+    series:[{name:'Average rating out of 10',color:'var(--s2)',vals:pts.map(function(p){return p.score;})}],
+    min:0,max:10,ticks:[0,5,10],fmt:function(v){return v.toFixed(1);},fmtTick:function(v){return v;}});
+  var top=pts[0], lowest=pts.slice().sort(function(a,b){return a.score-b.score;})[0];
+  $('k-quad').innerHTML='<span class="tl">Key takeaway</span>'+
+    '<b>'+esc(top.name)+'</b> has the highest correlation at '+top.r.toFixed(2)+
+    ', meaning it aligns with the recommend score more closely than the others'+
+    (top.k===lowest.k
+      ? ' — and it also carries our lowest rating, '+lowest.score.toFixed(2)+
+        '. Most influence, weakest performance, which makes it the clearest priority.'
+      : '. Our lowest rating is '+low(lowest.name)+' at '+lowest.score.toFixed(2)+
+        ', so that is where the room to improve sits.')+
+    ' All three correlations are positive, so every quality helps; the differences are in how much.';
+}
+
+/* ---------- lift ---------- */
+function renderLift(){
+  var c=cur();
+  var rows=CANON.map(function(k){var L=c.lift[k]||{};
+    return {k:k,w:L.well_lift,b:L.better_lift,nw:L.nw,nb:L.nb,wa:L.well_avg,ba:L.better_avg};})
+    .filter(function(r){return r.w!=null||r.b!=null;})
+    .sort(function(a,b){return (b.w==null?-99:b.w)-(a.w==null?-99:a.w);});
+  if(!rows.length){
+    $('t-lift').innerHTML='<p class="empty">Not enough responses in this selection.</p>';
+    $('c-lift').innerHTML=''; $('k-lift').innerHTML=''; return;
+  }
+  tbl($('t-lift'),
+    ['Quality','Named it a strength','Their average score','Difference vs the rest','Asked us to improve it','Their average score','Difference vs the rest'],
+    rows.map(function(r){return [esc(r.k),
+      r.nw||'0', r.wa==null?'—':r.wa.toFixed(2), r.w==null?null:'<b>'+(r.w>0?'+':'')+r.w.toFixed(2)+'</b>',
+      r.nb||'0', r.ba==null?'—':r.ba.toFixed(2), r.b==null?null:'<b>'+(r.b>0?'+':'')+r.b.toFixed(2)+'</b>'];}),
+    [0,1,1,1,1,1,1],function(ri){return ri===0;});
+  var vals=[]; rows.forEach(function(r){if(r.w!=null)vals.push(r.w);if(r.b!=null)vals.push(r.b);});
+  var m=Math.max(1,Math.ceil(Math.max.apply(null,vals.map(Math.abs))*2)/2);
+  hbars($('c-lift'),{cats:rows.map(function(r){return r.k;}),
+    series:[{name:'Identified it as a strength',color:'var(--s1)',vals:rows.map(function(r){return r.w;})},
+            {name:'Asked us to improve it',color:'var(--s2)',vals:rows.map(function(r){return r.b;})}],
+    min:-m,max:m,diverging:true,ticks:[-m,-m/2,0,m/2,m],
+    fmt:function(v){return (v>0?'+':'')+v.toFixed(1);},
+    fmtTick:function(v){return (v>0?'+':'')+(Math.round(v*10)/10);}});
+  var t=rows[0];
+  var worst=rows.slice().filter(function(r){return r.b!=null;}).sort(function(a,b){return a.b-b.b;})[0];
+  $('k-lift').innerHTML='<span class="tl">Key takeaway</span>'+
+    '<b>'+esc(t.k)+'</b> produces the largest positive difference at '+(t.w>0?'+':'')+t.w.toFixed(1)+
+    ' points'+(t.b!=null?', and the clients asking us to improve it sit '+Math.abs(t.b).toFixed(1)+' points below average':'')+'. '+
+    (worst && worst.k!==t.k
+      ? 'Worth noting separately: asking us to improve <b>'+low(worst.k)+'</b> comes with the steepest penalty at '+
+        worst.b.toFixed(1)+' points, from only '+worst.nb+' client'+(worst.nb===1?'':'s')+
+        ', which suggests it costs us more when it is absent than it gains us when present.'
+      : 'The qualities nearest zero, such as timeliness, are ones clients notice but which do not separate a satisfied client from a dissatisfied one.');
+}
+
+/* ---------- high vs low ---------- */
+function renderHL(which){
+  var c=cur(), field=which;
+  var hi=c.segs.High, mid=c.segs.Mid, lo=c.segs.Low;
+  if(!hi.n&&!lo.n){
+    $('t-'+which).innerHTML='<p class="empty">No high or low raters in this selection.</p>';
+    $('c-'+which).innerHTML=''; $('l-'+which).innerHTML=''; $('k-'+which).innerHTML=''; return;
+  }
+  var cats=CANON.filter(function(k){return (hi[field][k]||0)+(lo[field][k]||0)+(mid[field][k]||0)>0;});
+  if(which==='well') cats.sort(function(a,b){return (hi[field][b]||0)-(hi[field][a]||0);});
+  else cats.sort(function(a,b){return (lo[field][b]||0)-(lo[field][a]||0)||(mid[field][b]||0)-(mid[field][a]||0);});
+  $('l-'+which).innerHTML=
+    '<span><i class="sw" style="background:var(--s1)"></i>High raters, 9.0+ ('+hi.n+')</span>'+
+    '<span><i class="sw" style="background:var(--s3)"></i>Middle, 7.0–8.9 ('+mid.n+')</span>'+
+    '<span><i class="sw" style="background:var(--s2)"></i>Low raters, under 7.0 ('+lo.n+')</span>';
+  hbars($('c-'+which),{cats:cats,barH:15,bandPad:18,
+    series:[{name:'High raters (9.0+)',color:'var(--s1)',vals:cats.map(function(k){return hi.n?(hi[field][k]||0):null;})},
+            {name:'Middle (7.0–8.9)',color:'var(--s3)',vals:cats.map(function(k){return mid.n?(mid[field][k]||0):null;})},
+            {name:'Low raters (under 7.0)',color:'var(--s2)',vals:cats.map(function(k){return lo.n?(lo[field][k]||0):null;})}],
+    min:0,max:100,ticks:[0,25,50,75,100],unit:'%',
+    fmt:function(v){return Math.round(v)+'%';},fmtTick:function(v){return v+'%';}});
+  tbl($('t-'+which),
+    ['Quality','High raters ('+hi.n+')','Middle ('+mid.n+')','Low raters ('+lo.n+')','High minus low'],
+    cats.map(function(k){
+      var a=hi.n?(hi[field][k]||0):null, b=lo.n?(lo[field][k]||0):null;
+      return [esc(k),a==null?null:a+'%',mid.n?(mid[field][k]||0)+'%':null,b==null?null:b+'%',
+        (a==null||b==null)?null:'<b>'+(a-b>0?'+':'')+(a-b)+' pts</b>'];}),
+    [0,1,1,1,1],function(ri){return ri===0;});
+
+  var gaps=cats.map(function(k){return {k:k,g:(hi[field][k]||0)-(lo[field][k]||0)};});
+  if(which==='well'){
+    var w=gaps.slice().sort(function(a,b){return b.g-a.g;})[0];
+    var flat=gaps.slice().sort(function(a,b){return Math.abs(a.g)-Math.abs(b.g);})[0];
+    $('k-well').innerHTML='<span class="tl">Key takeaway</span>'+
+      '<b>'+esc(w.k)+'</b> separates the two groups most: '+(hi[field][w.k]||0)+'% of high raters name it a strength against '+
+      (lo[field][w.k]||0)+'% of low raters, a '+w.g+' point gap. '+
+      'By contrast <b>'+low(flat.k)+'</b> is named at almost the same rate by both groups, '+
+      (hi[field][flat.k]||0)+'% against '+(lo[field][flat.k]||0)+
+      '%, which marks it as something clients expect from us rather than something that earns a high score.';
+  } else {
+    var top=cats[0];
+    var hiTop=CANON.filter(function(k){return (hi[field][k]||0)>0;})
+      .sort(function(a,b){return (hi[field][b]||0)-(hi[field][a]||0);})[0];
+    $('k-better').innerHTML='<span class="tl">Key takeaway</span>'+
+      'Low raters point mainly at <b>'+low(top)+'</b>, named by '+(lo[field][top]||0)+'% of them'+
+      (hi[field][top]!=null?' against '+(hi[field][top]||0)+'% of high raters':'')+'. '+
+      (hiTop?'The high group\'s own top request is <b>'+low(hiTop)+'</b> at '+(hi[field][hiTop]||0)+
+        '%, which is a different conversation: these clients are satisfied and want us to prove the value rather than fix the work.'
+       :'The high group asked for almost nothing, which is itself the finding.');
+  }
+}
+
+/* ---------- rosters ---------- */
+function renderRosters(){
+  var c=cur();
+  var order=[['High','High raters','9.0 and above'],['Mid','Middle','7.0 to 8.9'],['Low','Low raters','under 7.0']];
+  $('segrosters').innerHTML=order.map(function(o){
+    var g=c.segs[o[0]];
+    return '<div><h4><span class="pill p-'+o[0]+'">'+o[1]+'</span></h4>'+
+      '<p class="dim" style="margin:6px 0 4px">'+o[2]+' &middot; '+g.n+' responses'+
+      (g.avg!=null?' &middot; average '+g.avg.toFixed(2):'')+'</p>'+
+      (g.clients.length?'<ul class="tight">'+g.clients.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'
+        :'<p class="empty">None</p>')+'</div>';
+  }).join('');
+  var hi=c.segs.High, lo=c.segs.Low;
+  $('k-seg').innerHTML='<span class="tl">Key takeaway</span>'+
+    'The low group is '+lo.n+' response'+(lo.n===1?'':'s')+' out of '+c.n+
+    '. That is small enough that each one should be treated as an individual account conversation rather than a trend, '+
+    'while the '+hi.n+' high raters are the reference set for what a well-run account looks like.';
+}
+
+/* ---------- comparisons ---------- */
+function renderCompare(){
+  var a=SC['2025|All'], b=SC['2026|All'];
+  var keys=DIMS.map(function(d){return d[0];});
+  hbars($('c-yoy'),{cats:keys.map(function(k){return DIMLAB[k];}),labW:172,barH:15,
+    series:[{name:'2025',color:'var(--s1)',vals:keys.map(function(k){return a.dims[k];})},
+            {name:'2026',color:'var(--s2)',vals:keys.map(function(k){return b.dims[k];})}],
+    min:0,max:10,ticks:[0,5,10],fmt:function(v){return v.toFixed(1);},fmtTick:function(v){return v;}});
+  tbl($('t-yoy'),['Rated question','2025','2026','Change'],
+    keys.map(function(k){var x=a.dims[k],y=b.dims[k];
+      return [esc(DIMLAB[k]),x==null?null:x.toFixed(2),y==null?null:y.toFixed(2),
+        (x==null||y==null)?null:'<b>'+(y-x>0?'+':'')+(y-x).toFixed(2)+'</b>'];}),[0,1,1,1]);
+
+  var m=SC[S.year+'|MKTG'], x=SC[S.year+'|AOX3'];
+  $('agsub').textContent='Average rating out of 10 per question, '+S.year+'. Switch the year toggle above to see the other year.';
+  if(!m||!x){ $('t-ag').innerHTML='<p class="empty">Agency split not available for '+S.year+'.</p>'; $('c-ag').innerHTML=''; }
+  else{
+    hbars($('c-ag'),{cats:keys.map(function(k){return DIMLAB[k];}),labW:172,barH:15,
+      series:[{name:'MKTG ('+m.n+')',color:'var(--s1)',vals:keys.map(function(k){return m.dims[k];})},
+              {name:'AOX3 ('+x.n+')',color:'var(--s2)',vals:keys.map(function(k){return x.dims[k];})}],
+      min:0,max:10,ticks:[0,5,10],fmt:function(v){return v.toFixed(1);},fmtTick:function(v){return v;}});
+    tbl($('t-ag'),['Rated question','MKTG ('+m.n+')','AOX3 ('+x.n+')','Difference'],
+      keys.map(function(k){var p=m.dims[k],q=x.dims[k];
+        return [esc(DIMLAB[k]),p==null?null:p.toFixed(2),q==null?null:q.toFixed(2),
+          (p==null||q==null)?null:'<b>'+(p-q>0?'+':'')+(p-q).toFixed(2)+'</b>'];}),[0,1,1,1]);
+  }
+  var rows=[];
+  ['2025','2026'].forEach(function(y){
+    ['All','MKTG','AOX3'].forEach(function(ag){
+      var s=SC[y+'|'+ag]; if(!s)return;
+      rows.push([y,ag==='All'?'All agencies':ag,s.n,s.clients,s.avg.toFixed(2),s.nps,
+        s.pP+'%',s.pA+'%',s.pD+'%',s.roi+'%']);
+    });
+  });
+  tbl($('agsnap'),['Year','Agency','Responses','Clients','Average score','NPS','Promoters','Passives','Detractors','Good ROI'],
+    rows,[0,0,1,1,1,1,1,1,1,1]);
+
+  var m25=SC['2025|MKTG'], a25=SC['2025|AOX3'], m26=SC['2026|MKTG'], a26=SC['2026|AOX3'];
+  $('k-cmp').innerHTML='<span class="tl">Key takeaway</span>'+
+    'Overall the firm improved modestly, from an average of '+a.avg.toFixed(2)+' to '+b.avg.toFixed(2)+
+    ', with proactivity the one question that did not move ('+a.dims.proactive.toFixed(1)+' to '+b.dims.proactive.toFixed(1)+'). '+
+    'The agency gap reversed direction between years: AOX3 led in 2025 ('+a25.nps+' NPS against MKTG\'s '+m25.nps+
+    ') and MKTG leads in 2026 ('+m26.nps+' against '+a26.nps+'). With '+m26.n+' and '+a26.n+
+    ' responses per side, a single unhappy account moves either number by more than ten points, so read the reversal as a prompt to look rather than a conclusion.';
+}
+
+/* ---------- quotes ---------- */
+function renderQuotes(){
+  var segs=['All','Low','Mid','High'];
+  var labels={All:'All groups',Low:'Low raters',Mid:'Middle',High:'High raters'};
+  $('qfilters').innerHTML='<span class="flabel">Group</span><div class="seg" id="qseg"></div>';
+  segbtns($('qseg'),segs.map(function(s){return {v:s,label:labels[s]};}),S.qseg,function(v){S.qseg=v;renderQuotes();});
+  var all=DATA.quotes.filter(function(x){
+    return String(x.year)===S.year && (S.agency==='All'||x.agency===S.agency);});
+  var q=all.filter(function(x){return S.qseg==='All'||x.seg===S.qseg;})
+           .sort(function(a,b){return (a.score||0)-(b.score||0);});
+  $('quotes').innerHTML=q.length?q.map(function(x){
+    return '<blockquote class="'+x.seg+'"><p>'+esc(x.text)+'</p><footer>'+
+      '<span class="pill p-'+x.seg+'">'+esc(x.seg)+'</span>'+
+      '<span><b>'+esc(x.company)+'</b></span><span>'+esc(x.person)+'</span>'+
+      '<span>'+esc(x.agency)+'</span><span>score '+(x.score==null?'—':x.score.toFixed(1))+'</span>'+
+      '<span>&middot; '+esc(x.field)+'</span></footer></blockquote>';
+  }).join(''):'<p class="empty">No written comments in this selection.</p>';
+
+  var loN=all.filter(function(x){return x.seg==='Low';}).length;
+  var hiN=all.filter(function(x){return x.seg==='High';}).length;
+  var themes=S.year==='2026'
+    ? 'Low raters return to three things: we execute but do not lead, our writing does not yet show a deep grasp of their product, and scope and process need tightening. High raters describe the team as an extension of their own, and their only asks are measurement and consistency.'
+    : 'Low raters focus on media results falling short of expectations and on strategy coming from their side rather than ours. High raters name the people and the responsiveness, and their asks are writing polish and clearer ROI evidence.';
+  $('k-quotes').innerHTML='<span class="tl">Key takeaway</span>'+all.length+' written comments in this selection, '+
+    loN+' from low raters and '+hiN+' from high raters. '+themes+
+    ' Use the group filter below to read one side at a time.';
+}
+
+/* ---------- roster ---------- */
+var sortState={col:9,dir:1};
+function renderRoster(){
+  var rs=DATA.records.filter(function(r){
+    return String(r.year)===S.year && (S.agency==='All'||r.agency===S.agency);});
+  var head=['Client','Respondent','Agency','Group','Overall','Proactivity','Understanding','Tools','Recommend','Average','Good ROI'];
+  var alg=[0,0,0,0,1,1,1,1,1,1,0];
+  var keyf=[function(x){return x.company.toLowerCase();},function(x){return (x.person||'').toLowerCase();},
+    function(x){return x.agency;},function(x){return x.composite||0;},
+    function(x){return x.overall||0;},function(x){return x.proactive||0;},
+    function(x){return x.understanding||0;},function(x){return x.tools||0;},
+    function(x){return x.recommend||0;},function(x){return x.composite||0;},
+    function(x){return x.roi||'';}];
+  var f=keyf[sortState.col];
+  rs=rs.slice().sort(function(a,b){var A=f(a),B=f(b);return (A>B?1:A<B?-1:0)*sortState.dir;});
+  var m=$('roster');
+  m.innerHTML='<table><thead><tr>'+head.map(function(h,i){
+    return '<th data-c="'+i+'"'+(alg[i]?' class="num"':'')+'>'+h+(sortState.col===i?(sortState.dir>0?' ↑':' ↓'):'')+'</th>';
+  }).join('')+'</tr></thead><tbody>'+rs.map(function(r){
+    var cells=[esc(r.company),esc(r.person),r.agency,'<span class="pill p-'+r.seg+'">'+r.seg+'</span>',
+      num(r.overall,0),num(r.proactive,0),num(r.understanding,0),num(r.tools,0),num(r.recommend,0),
+      r.composite==null?'—':r.composite.toFixed(1),esc(r.roi||'—')];
+    return '<tr>'+cells.map(function(c,i){return '<td'+(alg[i]?' class="num"':'')+'>'+c+'</td>';}).join('')+'</tr>';
+  }).join('')+'</tbody></table>';
+  Array.prototype.forEach.call(m.querySelectorAll('th'),function(th){
+    th.onclick=function(){var cc=+th.dataset.c;
+      sortState.dir=(sortState.col===cc)?-sortState.dir:(cc<3||cc===10?1:-1);
+      sortState.col=cc;renderRoster();};
+  });
+}
+
+/* ---------- method ---------- */
+function renderMethod(){
+  $('method').innerHTML='<b>How to read this.</b> Score is the average of the five 1-to-10 questions each client answered, '+
+    'the same column the source spreadsheet labels NPS SCORE. Groups split on that average: high is 9.0 and above, middle 7.0 to 8.9, low under 7.0. '+
+    'The headline Net Promoter Score uses the standard method on the "would you recommend us" question only, where 9 and 10 count as promoters, '+
+    '7 and 8 as passives, and 6 or below as detractors. '+
+    'The 2025 and 2026 surveys used different answer options, so they are mapped to one set: analytics support reads as measurement and ROI, '+
+    'driving results as results, strategic thinking as strategy. Communication was asked in 2025 only and problem-solving in 2026 only, '+
+    'so neither appears in both years. LeanTaaS and Lantern are counted under AOX3. '+
+    'On 2024: the response-level data only goes back to 2025. The 2025 deck carries 2024 summary percentages for 27 responses, '+
+    'but with no response-level data behind them there is no way to split 2024 by score or by agency.';
+}
+
+/* ---------- chart/table toggle: table is the default view ---------- */
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.tabbtn'); if(!b)return;
+  var p=b.dataset.pair, chart=$('c-'+p), table=$('t-'+p);
+  if(!chart||!table)return;
+  var showChart=chart.classList.contains('hidden');
+  chart.classList.toggle('hidden',!showChart);
+  table.classList.toggle('hidden',showChart);
+  b.textContent=showChart?'Table':'Chart';
+});
+
+/* ---------- theme ---------- */
+var tb=$('themebtn');
+function setTheme(t){document.documentElement.dataset.theme=t;tb.textContent=t==='dark'?'Light mode':'Dark mode';render();}
+tb.onclick=function(){setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');};
+if(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.dataset.theme='dark';
+tb.textContent=document.documentElement.dataset.theme==='dark'?'Light mode':'Dark mode';
+
+/* ---------- render ---------- */
+function render(){
+  buildFilters();
+  if(!cur()){S.agency='All';buildFilters();}
+  renderTiles();renderTrack();renderQuad();renderLift();
+  renderHL('well');renderHL('better');renderRosters();
+  renderCompare();renderQuotes();renderRoster();renderMethod();
+}
+render();
+var rt;addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(render,180);});
+})();
+
+</script>
+</body>
+</html>
